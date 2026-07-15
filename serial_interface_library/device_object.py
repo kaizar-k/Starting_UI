@@ -3,13 +3,14 @@ from serial_interface_library.channel_object import ChannelObject
 
 # this will be an object for interfacing with individual connected devices
 class DeviceObject(serial.Serial):
-    def __init__(self, com_port='COM4', baud_rate=115200):
+    def __init__(self, config_str='NC:1, SP:2', com_port='COM4', baud_rate=115200):
         super().__init__()
 
         # device settings
         self.connected = False
         self.port = com_port
         self.baudrate = baud_rate
+        self.config_str = config_str
 
         # channel values / data
         self.time_values = []
@@ -81,6 +82,19 @@ class DeviceObject(serial.Serial):
             print('Could not send command')
 
         return success
+
+
+    def start_experiment(self):
+        start_message = 'start'
+        start_message += f', {self.config_str}'
+        start_message += '\n'
+
+        self.send_command(start_message)
+
+
+    def stop_experiment(self):
+        stop_message = 'stop\n'
+        self.send_command(stop_message)
 
 
     def receive_data(self):
