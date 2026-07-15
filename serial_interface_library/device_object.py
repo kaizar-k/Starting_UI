@@ -79,7 +79,7 @@ class DeviceObject(serial.Serial):
             success = True
 
         except serial.SerialException:
-            print('Could not send command')
+            print(f'Could not send command: {command}')
 
         return success
 
