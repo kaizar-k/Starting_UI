@@ -1,17 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="569f95ca-1336-47c9-befc-6fffd006cadc" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/serial_interface.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/serial_interface_library/channel_object.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/serial_interface_library/device_object.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/serial_interface_library/serial_interface.py" afterDir="false" />
-    </list>
+    <list default="true" id="569f95ca-1336-47c9-befc-6fffd006cadc" name="Changes" comment="First draft of serial interface for connecting to multiple Arduino/ESP based data logging devices, with multiple, configurable channels" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -49,6 +39,7 @@
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "git-widget-placeholder": "master",
     "ignore.virus.scanning.warn.message": "true",
+    "settings.editor.selected.configurable": "settings.sync",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -66,14 +57,27 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1784144738729</updated>
-      <workItem from="1784144739796" duration="7432000" />
+      <workItem from="1784144739796" duration="7842000" />
     </task>
+    <task id="LOCAL-00001" summary="First draft of serial interface for connecting to multiple Arduino/ESP based data logging devices, with multiple, configurable channels">
+      <option name="closed" value="true" />
+      <created>1784152301454</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1784152301454</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="First draft of serial interface for connecting to multiple Arduino/ESP based data logging devices, with multiple, configurable channels" />
+    <option name="LAST_COMMIT_MESSAGE" value="First draft of serial interface for connecting to multiple Arduino/ESP based data logging devices, with multiple, configurable channels" />
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/serial_interface$main.coverage" NAME="main Coverage Results" MODIFIED="1784152180462" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/serial_interface$main.coverage" NAME="main Coverage Results" MODIFIED="1784152456212" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
