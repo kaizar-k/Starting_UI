@@ -1,4 +1,4 @@
-# This is a test Python script to interact with an arduino connected with usb
+# This is a test Python script to interact with an Arduino connected with usb
 # via the serial interface class
 
 from serial_interface_library.serial_interface import SerialInterface

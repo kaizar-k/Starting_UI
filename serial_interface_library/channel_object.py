@@ -1,3 +1,4 @@
+# this is an object for saving in-coming data from devices
 class ChannelObject:
     def __init__(self, uom='Resistance (Ohms)'):
         self.data = []

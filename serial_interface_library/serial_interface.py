@@ -2,7 +2,7 @@ import serial
 import serial.tools.list_ports
 from serial_interface_library.device_object import DeviceObject
 
-
+# This will be a single object for controlling all devices
 class SerialInterface:
     def __init__(self):
         # set up the serial interface

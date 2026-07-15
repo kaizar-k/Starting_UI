@@ -1,7 +1,7 @@
 import serial
 from serial_interface_library.channel_object import ChannelObject
 
-
+# this will be an object for interfacing with individual connected devices
 class DeviceObject(serial.Serial):
     def __init__(self, com_port='COM4', baud_rate=115200):
         super().__init__()
