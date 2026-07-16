@@ -5,9 +5,9 @@ from serial_interface_library.device_object import DeviceObject
 # This will be a single object for controlling all devices
 class SerialInterface:
     def __init__(self):
+
         # set up the serial interface
         self.available_ports = []
-        self.device = DeviceObject() # dummy object to test stuff
         self.devices = [] # the list of connected, or previously connected, devices
 
 
@@ -50,12 +50,35 @@ class SerialInterface:
 
 
     def connect_by_port(self, port='COM4', baud_rate=115200):
-        self.device.baudrate = baud_rate
-        self.device.port = port
-        self.device.open()
+        connection_successful = False
+        self.devices.append(DeviceObject(com_port=port, baud_rate=baud_rate))
+
+        if not self.check_port_for_connection(port):
+            connection_successful = self.devices[len(self.devices)-1].connect()
+
+        if not connection_successful:
+            self.devices.pop()
+
+        return connection_successful
 
 
     def connect_by_index(self, index=0, baud_rate=115200):
-        self.device.baudrate = baud_rate
-        self.device.port = self.available_ports[index]
-        self.device.open()
+        connection_successful = False
+        self.devices.append(DeviceObject(baud_rate=baud_rate))
+        self.devices[len(self.devices)-1].port = self.available_ports[index]
+
+        if not self.check_port_for_connection(self.devices[len(self.devices)-1].port):
+            connection_successful = self.devices[len(self.devices) - 1].connect()
+
+        if not connection_successful:
+            self.devices.pop()
+
+        return connection_successful
+
+    def check_port_for_connection(self, port):
+        port_in_use = False
+        for device in self.devices:
+            if device.port is port:
+                port_in_use = True
+
+        return port_in_use

@@ -12,6 +12,7 @@ class ChannelObject:
 
         return str_to_return
 
+
     def __repr__(self):
         str_to_return = f' UOM: {self.uom}\n'
         str_to_return += f' Data: {len(self.data)}\n'
