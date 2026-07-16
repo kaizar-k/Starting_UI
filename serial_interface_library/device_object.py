@@ -61,11 +61,11 @@ class DeviceObject(serial.Serial):
         try:
             self.open()
             self.connected = True
-            print('Connected')
+            print(f'Connected on port: {self.port}')
 
         except serial.SerialException:
             self.connected = False
-            print('Could not connect to device')
+            print(f'Could not connect port: {self.port}')
 
         return self.connected
 

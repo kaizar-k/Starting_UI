@@ -54,6 +54,7 @@ class SerialInterface:
         self.devices.append(DeviceObject(com_port=port, baud_rate=baud_rate))
 
         if not self.check_port_for_connection(port):
+            print(f'Device {len(self.devices)-1}:')
             connection_successful = self.devices[len(self.devices)-1].connect()
 
         if not connection_successful:
@@ -68,6 +69,7 @@ class SerialInterface:
         self.devices[len(self.devices)-1].port = self.available_ports[index]
 
         if not self.check_port_for_connection(self.devices[len(self.devices)-1].port):
+            print(f'Device {len(self.devices)-1}:')
             connection_successful = self.devices[len(self.devices) - 1].connect()
 
         if not connection_successful:
