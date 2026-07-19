@@ -101,6 +101,8 @@ class DeviceObject(serial.Serial):
         to_return = True
         return_data = False
         data = None
+
+        # TODO if multiple lines are waiting then intake all lines, instead of just one.
         if self.in_waiting > 0:
             data = self.readline()
 
@@ -114,7 +116,7 @@ class DeviceObject(serial.Serial):
 
             # equal to num_channels + 1 = data
             if len(data) == len(self.channels) + 1:
-                self.time_values.append(data[0])
+                self.time_values.append(int(data[0]))
                 for i in range(1, len(self.channels)):
                     self.channels[i].add_value(float(data[i+1]))
 
