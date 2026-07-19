@@ -1,6 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkFont
+
+from gui.controls.zLabel import ZLabel
+from gui.controls.z_button import ZButton
+from gui.font_definitions import TITLE_FONT
 from gui.frames.container_frame import ContainerFrame
 
 
@@ -40,13 +44,14 @@ class PageObject(tk.Frame):
         self.parameters_button_frame.pack(side='left', fill='y')
 
         # pack a single toggle button into the parameters button frame
-        dzp_font = tkFont.Font(family='Arial Nova Cond', size=36, weight='bold')
-        self.pop_up_button = tk.Button(self.parameters_button_frame, text="<", font=dzp_font)
+        self.pop_up_button = ZButton(self.parameters_button_frame, text="<")
+        self.pop_up_button.configure(font=TITLE_FONT)
         self.pop_up_button.pack(fill='both', expand=True)
 
         # pack title of page into title_frame
-        self.title = tk.Label(self.title_frame, text=self.title_text, font=dzp_font)
+        self.title = ZLabel(self.title_frame, text=self.title_text)
         self.title.pack(side='left', fill='both', expand=False, anchor='w')
+        self.title.configure(font=TITLE_FONT)
 
         # Page tabs across the top, beneath the header
 

@@ -1,14 +1,15 @@
 import tkinter as tk
-from gui.pages.page_object import PageObject
-from gui.pages.pop_up_banner import PopUpObject
-
 
 class TKinterApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
+        # these are here because tk.font cannot be imported before the main window is active
+        from gui.pages.page_object import PageObject
+        from gui.pages.pop_up_banner import PopUpObject
+
         # set up window Title and geometry
-        self.title('Tkinter Window')
+        self.title('This is a test Tkinter Window with the aim of creating a generalise gui framework for data acquisition')
 
         # set the position of the window to the center of the screen
         self.geometry(f'{self.winfo_screenwidth()}x{self.winfo_screenheight()}+{0}+{0}')

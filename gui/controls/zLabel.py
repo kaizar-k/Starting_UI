@@ -2,7 +2,7 @@ import tkinter as tk
 from gui.colour_scheme import *
 from gui.font_definitions import *
 
-class ZButton(tk.Button):
+class ZLabel(tk.Label):
     def __init__(self, master, text):
         super().__init__(master)
-        self.configure(text=text, fg=TEXT_COLOUR, bg=LOWLIGHT, font=HEADER_FONT, activebackground=BACKGROUND)
+        self.configure(text=text, fg=TEXT_COLOUR, bg=BACKGROUND, font=HEADER_FONT)
