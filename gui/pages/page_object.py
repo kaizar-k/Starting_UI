@@ -3,7 +3,7 @@ from tkinter import ttk
 from tkinter import font as tkFont
 
 from gui.colour_scheme import LOGO_COLOUR
-from gui.controls.zLabel import ZLabel
+from gui.controls.z_Label import ZLabel
 from gui.controls.z_button import ZButton
 from gui.font_definitions import TITLE_FONT, HEADER_FONT
 from gui.frames.container_frame import ContainerFrame

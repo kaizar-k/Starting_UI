@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from gui.controls.zLabel import ZLabel
+from gui.controls.z_Label import ZLabel
 from gui.controls.z_button import ZButton
 from gui.frames.container_frame import ContainerFrame
 from gui.colour_scheme import *
