@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="569f95ca-1336-47c9-befc-6fffd006cadc" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/gui/colour_scheme.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gui/controls/zLabel.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gui/font_definitions.py" afterDir="false" />
+    <list default="true" id="569f95ca-1336-47c9-befc-6fffd006cadc" name="Changes" comment="Gave it a central colour scheme and fonts for entire project. Also created zLabel and zButton class">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/colour_scheme.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/colour_scheme.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gui/controls/z_button.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/controls/z_button.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/frames/container_frame.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/frames/container_frame.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gui/gui_control.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/gui_control.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gui/pages/page_object.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/pages/page_object.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gui/pages/pop_up_banner.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/pages/pop_up_banner.py" afterDir="false" />
@@ -59,6 +56,7 @@
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;Python.gui_control.executor&quot;: &quot;Run&quot;,
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.zLabel.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
@@ -93,7 +91,10 @@
       <workItem from="1784185382270" duration="2398000" />
       <workItem from="1784374477161" duration="11170000" />
       <workItem from="1784452991036" duration="3087000" />
-      <workItem from="1784463786150" duration="11125000" />
+      <workItem from="1784463786150" duration="11196000" />
+      <workItem from="1784578214234" duration="667000" />
+      <workItem from="1784796989848" duration="7525000" />
+      <workItem from="1784831475581" duration="455000" />
     </task>
     <task id="LOCAL-00001" summary="First draft of serial interface for connecting to multiple Arduino/ESP based data logging devices, with multiple, configurable channels">
       <option name="closed" value="true" />
@@ -167,7 +168,15 @@
       <option name="project" value="LOCAL" />
       <updated>1784456175646</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Gave it a central colour scheme and fonts for entire project. Also created zLabel and zButton class">
+      <option name="closed" value="true" />
+      <created>1784500249505</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1784500249506</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -181,10 +190,12 @@
     <MESSAGE value="added check for existing connection before attempting to connect to a new device" />
     <MESSAGE value="added com port to termineal output for def connect() messages" />
     <MESSAGE value="Added generic page object and parameters pop-up for user interaction&#10;&#10;TODO - colour scheme, distinct pages and parameters object for specific uses" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added generic page object and parameters pop-up for user interaction&#10;&#10;TODO - colour scheme, distinct pages and parameters object for specific uses" />
+    <MESSAGE value="Gave it a central colour scheme and fonts for entire project. Also created zLabel and zButton class" />
+    <option name="LAST_COMMIT_MESSAGE" value="Gave it a central colour scheme and fonts for entire project. Also created zLabel and zButton class" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/serial_interface$zLabel.coverage" NAME="zLabel Coverage Results" MODIFIED="1784819032880" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui/controls" />
     <SUITE FILE_PATH="coverage/serial_interface$gui_control.coverage" NAME="gui_control Coverage Results" MODIFIED="1784380234985" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui" />
-    <SUITE FILE_PATH="coverage/serial_interface$main.coverage" NAME="main Coverage Results" MODIFIED="1784495205011" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/serial_interface$main.coverage" NAME="main Coverage Results" MODIFIED="1784820924449" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

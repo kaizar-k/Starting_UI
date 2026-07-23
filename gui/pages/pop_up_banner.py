@@ -9,11 +9,13 @@ from gui.font_definitions import *
 # This will be the parent class for all the pop-up windows
 
 class PopUpObject(tk.Frame):
-    def __init__(self, master, title_text):
+    def __init__(self, master, title_text, page_index, pop_up_index):
         tk.Frame.__init__(self, master)
         self.master = master
         self.title_text = title_text
         self.frame_width_ratio = 4
+        self.page_index = page_index
+        self.pop_up_page_index = pop_up_index
 
         screen_height = self.winfo_screenheight()
         screen_width = self.winfo_screenwidth()

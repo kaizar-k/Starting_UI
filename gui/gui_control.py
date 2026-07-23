@@ -1,4 +1,8 @@
 import tkinter as tk
+from functools import partial
+
+from gui.colour_scheme import BACKGROUND, LOGO_COLOUR
+
 
 class TKinterApp(tk.Tk):
     def __init__(self):
@@ -18,23 +22,54 @@ class TKinterApp(tk.Tk):
 
         # in here we will add all the pages and how they are controlled
         self.pages = []
-        # add main page
-        self.pages.append(PageObject(self, "Generic page object")) # temp main page
-        self.pages.append(PopUpObject(self, 'Generic configuration pop-up')) # example popup window
+        page_index = 0
+
+        # add main page (page 0)
+        self.pages.append(PageObject(self, "Main Page", page_index, page_index+1)) # temp main page
+        self.pages.append(PopUpObject(self, 'Main page popup', page_index, page_index+1)) # temp popup window
+
+        # add page 1
+        page_index += 2
+        self.pages.append(PageObject(self, "Page 1", page_index, page_index+1)) # temp page
+        self.pages.append(PopUpObject(self, 'Page 1 popup', page_index, page_index+1)) # temp popup window
+
+        # add page 2
+        page_index += 2
+        self.pages.append(PageObject(self, "Page 2", page_index, page_index+1)) # temp page
+        self.pages.append(PopUpObject(self, 'Page 2 popup', page_index, page_index+1)) # temp popup window
+
+        # add page 3
+        page_index += 2
+        self.pages.append(PageObject(self, "Page 3", page_index, page_index+1)) # temp page
+        self.pages.append(PopUpObject(self, 'Page 3 popup', page_index, page_index+1)) # temp popup window
+
+        # add page 4
+        page_index += 2
+        self.pages.append(PageObject(self, "Page 4", page_index, page_index+1)) # temp page
+        self.pages.append(PopUpObject(self, 'Page 4 popup', page_index, page_index+1)) # temp popup window
+
         self.show_frame(0) # makes sure main page is top page
+
+        print(f'number of pages: {len(self.pages)}')
 
         for page in self.pages:
             if type(page) == PopUpObject:
                 page.grid(row=0, column=0, sticky="ne")
-                page.pop_up_button.configure(command = lambda: self.show_frame(0))
+                page.pop_up_button.configure(command=partial(self.show_frame, page.page_index))
 
             if type(page) == PageObject:
                 page.grid(row = 0, column = 0, sticky ="nsew")
-                page.pop_up_button.configure(command = lambda: self.show_frame(1))
+                page.title.configure(bg=LOGO_COLOUR)
+                page.pop_up_button.configure(command=partial(self.show_frame, page.pop_up_page_index))
 
-
-
-
+                button_index = 0
+                associated_page_index = 0
+                for button in page.page_buttons:
+                    button.configure(command=partial(self.show_frame, self.pages[associated_page_index].page_index))
+                    if button_index == 0 and page.page_index == 0 or button_index == page.page_index / 2:
+                        button.configure(bg=LOGO_COLOUR)
+                    button_index += 1
+                    associated_page_index += 2
 
 
     def show_frame(self, cont):
