@@ -11,6 +11,7 @@ The basic specs for this application are:
   the ability to create, update, delete and upload configureation files to plot these values to a positional / geometric argument, and produce a live heat map.
   The ability to import old dat and configuration files to view plots
     The ability to scroll through a timeline of previously collected data and generate a pseudo live heat map.
+  The ability to export both raw_data file, filtered/manipulated data file, and a configuration_file to be able to recreate and inturpret any collected data.
 
 This is going to be a long term project which will grow as needs progress and skills develop. 
 
