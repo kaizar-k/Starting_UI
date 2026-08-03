@@ -7,4 +7,5 @@ class ContainerFrame(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
 
-        self.configure(bg=BACKGROUND, highlightbackground=TEXT_COLOUR, highlightthickness=1) # adds a 1px black border around the frame for ease fo layout
+        self.configure(bg=BACKGROUND) # adds a 1px black border around the frame for ease fo layout
+#, highlightbackground=TEXT_COLOUR, highlightthickness=1
