@@ -4,10 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="569f95ca-1336-47c9-befc-6fffd006cadc" name="Changes" comment="Edited colour scheme, added multiple pages, page switching and page specific parameter popup windows">
-      <change afterPath="$PROJECT_DIR$/gui/pages/main_page.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/frames/container_frame.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/frames/container_frame.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gui/gui_control.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/gui_control.py" afterDir="false" />
+    <list default="true" id="569f95ca-1336-47c9-befc-6fffd006cadc" name="Changes" comment="Added a single main_page class to demonstrate child class of generic page object and how that might opperate">
+      <change afterPath="$PROJECT_DIR$/gui/frames/label_frame.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/controls/z_Label.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/controls/z_Label.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/pages/pop_up_banner.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/pages/pop_up_banner.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -183,7 +183,15 @@
       <option name="project" value="LOCAL" />
       <updated>1784832003272</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Added a single main_page class to demonstrate child class of generic page object and how that might opperate">
+      <option name="closed" value="true" />
+      <created>1785763148206</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1785763148206</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -199,7 +207,8 @@
     <MESSAGE value="Added generic page object and parameters pop-up for user interaction&#10;&#10;TODO - colour scheme, distinct pages and parameters object for specific uses" />
     <MESSAGE value="Gave it a central colour scheme and fonts for entire project. Also created zLabel and zButton class" />
     <MESSAGE value="Edited colour scheme, added multiple pages, page switching and page specific parameter popup windows" />
-    <option name="LAST_COMMIT_MESSAGE" value="Edited colour scheme, added multiple pages, page switching and page specific parameter popup windows" />
+    <MESSAGE value="Added a single main_page class to demonstrate child class of generic page object and how that might opperate" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added a single main_page class to demonstrate child class of generic page object and how that might opperate" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/serial_interface$zLabel.coverage" NAME="zLabel Coverage Results" MODIFIED="1784819032880" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/gui/controls" />

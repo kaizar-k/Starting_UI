@@ -5,6 +5,7 @@ from gui.controls.z_button import ZButton
 from gui.frames.container_frame import ContainerFrame
 from gui.colour_scheme import *
 from gui.font_definitions import *
+from gui.frames.label_frame import LabelFrame
 
 # This will be the parent class for all the pop-up windows
 
@@ -44,11 +45,11 @@ class PopUpObject(tk.Frame):
         self.main_area_frame = ContainerFrame(self.main_container)
 
         # pack layer 2
-        self.title_frame.pack(side='top', fill='x', expand=False)
+        self.title_frame.pack(side='top', fill='x', expand=True)
         self.main_area_frame.pack(side='top', fill='both', expand=True)
 
         self.main_area_frame.configure(width=((screen_width / self.frame_width_ratio )/ 10)*9, height=screen_height)
 
         # pack title of page into title_frame
-        self.title = ZLabel(self.title_frame, text=self.title_text)
-        self.title.pack(side='left', fill='both', expand=False, anchor='w')
+        self.title = LabelFrame(self.title_frame, label_text=self.title_text)
+        self.title.pack(side='top', fill='both', expand=True, anchor='w')
