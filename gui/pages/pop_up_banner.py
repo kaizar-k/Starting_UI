@@ -37,7 +37,13 @@ class PopUpObject(tk.Frame):
 
         # pack a single toggle button into the parameters button frame
         self.pop_up_button = ZButton(self.hide_frame_container, text='<')
-        self.pop_up_button.configure(font=TITLE_FONT)
+        self.pop_up_button.configure(
+            font=TITLE_FONT,
+            bg=HIGHLIGHT,
+            highlightbackground=HIGHLIGHT,
+            activebackground='#D9ECFF',
+            activeforeground=TEXT_COLOUR,
+        )
         self.pop_up_button.pack(fill='y', expand=True)
         self.pop_up_button.configure(width=1, height=int(screen_height))
 
