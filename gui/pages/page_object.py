@@ -17,7 +17,7 @@ class PageObject(tk.Frame):
         self.title_text = title_text
         screen_height = self.winfo_screenheight()
         screen_width = self.winfo_screenwidth()
-        self.configure(bg='green')
+        self.configure(bg='#f5f5f5')
         self.page_index = page_index
         self.pop_up_page_index = pop_up_index
 
@@ -28,15 +28,12 @@ class PageObject(tk.Frame):
         self.menu_frame = ContainerFrame(self)
         self.menu_frame.configure(height=int(screen_height * 0.1))
         self.main_area_frame = ContainerFrame(self)
-        self.main_area_frame.configure(height=int(screen_height * 0.65), bg='blue')
-        self.footer_frame = ContainerFrame(self)
-        self.footer_frame.configure(height=int(screen_height * 0.1))
+        self.main_area_frame.configure(height=int(screen_height * 0.75), bg='#ffffff')
 
         # pack layer 1
         self.title_frame.pack(side='top', fill='x')
         self.menu_frame.pack(side='top', fill='x')
         self.main_area_frame.pack(side='top', fill='x')
-        self.footer_frame.pack(side='top', fill='x')
 
         # Create only the three top navigation buttons needed for the current app flow.
         self.page_buttons = []
