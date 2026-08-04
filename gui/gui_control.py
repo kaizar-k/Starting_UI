@@ -1,7 +1,7 @@
 import tkinter as tk
 from functools import partial
 
-from gui.colour_scheme import LOGO_COLOUR
+from gui.page_features.colour_scheme import LOGO_COLOUR
 
 
 class TKinterApp(tk.Tk):

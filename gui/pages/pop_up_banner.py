@@ -3,8 +3,8 @@ import tkinter as tk
 from gui.controls.z_Label import ZLabel
 from gui.controls.z_button import ZButton
 from gui.frames.container_frame import ContainerFrame
-from gui.colour_scheme import *
-from gui.font_definitions import *
+from gui.page_features.colour_scheme import *
+from gui.page_features.font_definitions import *
 from gui.frames.label_frame import LabelFrame
 
 # This will be the parent class for all the pop-up windows

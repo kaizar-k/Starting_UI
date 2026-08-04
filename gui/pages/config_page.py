@@ -1,116 +1,143 @@
 import tkinter as tk
 from tkinter import ttk
 
-from gui.controls.z_Label import ZLabel
+from gui.page_features.dropdown_object import DropdownObject
 from gui.pages.page_object import PageObject
 
 
 class ConfigPage(PageObject):
-    """Configuration page with layered sensor selection controls."""
+    """Configuration page with dynamically generated per-layer feature controls."""
 
     def __init__(self, master, title_text, page_index, pop_up_index):
         super().__init__(master, title_text, page_index, pop_up_index)
 
         # Store the selected configuration values so they can be reused later.
         self.config_values = {
-            "ink_type": None,
-            "number_of_layers": None,
+            "number_of_layers": "1",
+            "layer_features": {},
+            "layer_description": [],
         }
 
-        # Keep track of the dynamically created layer-specific controls.
-        self.layer_sensor_vars = []
-        self.layer_sensor_dropdowns = []
+        # Define the per-layer features that should be editable for each layer.
+        # Add new entries with placement="secondary" if you want them to appear in the
+        # side column for extra layer descriptions.
+        self.layer_feature_definitions = [
+            ("sensor", "Sensor", ["Type A", "Type B", "Type C"], "primary"),
+            ("ink", "Ink", ["Ink A", "Ink B", "Ink C"], "primary"),
+        ]
+
+        # Keep track of the dynamically created dropdowns for each layer and feature.
+        self.layer_feature_dropdowns = {}
 
         # Create a simple form area inside the main content frame.
         self.form_frame = ttk.Frame(self.main_area_frame, padding=20)
         self.form_frame.pack(fill="both", expand=True, padx=20, pady=20)
         self.form_frame.configure(borderwidth=1, relief="solid")
 
-        # Dropdown for selecting the number of layers. This appears first.
-        self.layers_label = ZLabel(self.form_frame, text="Number of layers")
-        self.layers_label.pack(anchor="w", pady=(0, 5))
-
-        self.layer_options = [str(value) for value in range(1, 6)]
-        self.layers_var = tk.StringVar(value=self.layer_options[0])
-        self.layers_dropdown = ttk.Combobox(
+        # Number of layers dropdown first.
+        self.layers_dropdown = DropdownObject(
             self.form_frame,
-            textvariable=self.layers_var,
-            values=self.layer_options,
-            state="readonly",
-            width=20,
+            "Number of layers",
+            [str(value) for value in range(1, 6)],
+            default_value="1",
+            command=self._refresh_layer_inputs,
         )
         self.layers_dropdown.pack(anchor="w", pady=(0, 10))
-        self.layers_dropdown.bind("<<ComboboxSelected>>", self._refresh_layer_inputs)
 
-        # Create a separate frame to hold the dynamic layer-specific sensor selectors.
-        self.layer_sensor_frame = ttk.Frame(self.form_frame)
-        self.layer_sensor_frame.pack(fill="x", anchor="w")
+        # Create a separate frame to hold the dynamic layer-specific controls.
+        self.layer_feature_frame = ttk.Frame(self.form_frame)
+        self.layer_feature_frame.pack(fill="x", anchor="w")
 
-        # Dropdown for selecting the ink type.
-        self.ink_label = ZLabel(self.form_frame, text="Ink type")
-        self.ink_label.pack(anchor="w", pady=(0, 10))
-
-        self.ink_options = ["Ink A", "Ink B", "Ink C"]
-        self.ink_var = tk.StringVar(value=self.ink_options[0])
-        self.ink_dropdown = ttk.Combobox(
+        # Summary label for the generated layer descriptions.
+        self.summary_var = tk.StringVar(value="Layer descriptions will appear here.")
+        self.summary_label = ttk.Label(
             self.form_frame,
-            textvariable=self.ink_var,
-            values=self.ink_options,
-            state="readonly",
-            width=20,
+            textvariable=self.summary_var,
+            wraplength=600,
+            justify="left",
         )
-        self.ink_dropdown.pack(anchor="w")
-        self.ink_dropdown.bind("<<ComboboxSelected>>", self._save_config_values)
+        self.summary_label.pack(anchor="w", pady=(10, 0))
 
-        # Build the initial set of layer-specific sensor selectors.
+        # Build the initial set of per-layer dropdowns.
         self._refresh_layer_inputs()
 
     def _refresh_layer_inputs(self, event=None):
-        """Clear and recreate the per-layer sensor dropdowns based on the selected layer count."""
-        # Remove any old layer-specific widgets before rebuilding the form.
-        for widget in self.layer_sensor_frame.winfo_children():
+        """Clear and recreate the per-layer feature dropdowns based on the selected layer count."""
+        for widget in self.layer_feature_frame.winfo_children():
             widget.destroy()
 
-        self.layer_sensor_vars.clear()
-        self.layer_sensor_dropdowns.clear()
+        self.layer_feature_dropdowns.clear()
 
-        # Default to one layer if the selection cannot be parsed.
         try:
-            layer_count = int(self.layers_var.get())
+            layer_count = int(self.layers_dropdown.get())
         except ValueError:
             layer_count = 1
 
         self.config_values["number_of_layers"] = str(layer_count)
 
-        self.sensor_options = ["Type A", "Type B", "Type C"]
-
-        # Create one sensor selector for each selected layer.
         for layer_number in range(1, layer_count + 1):
-            label = ZLabel(self.layer_sensor_frame, text=f"Layer {layer_number} sensor")
-            label.pack(anchor="w", pady=(0, 5))
-
-            sensor_var = tk.StringVar(value=self.sensor_options[0])
-            sensor_dropdown = ttk.Combobox(
-                self.layer_sensor_frame,
-                textvariable=sensor_var,
-                values=self.sensor_options,
-                state="readonly",
-                width=20,
+            layer_frame = ttk.LabelFrame(
+                self.layer_feature_frame,
+                text=f"Layer {layer_number}",
+                padding=10,
             )
-            sensor_dropdown.pack(anchor="w", pady=(0, 10))
-            sensor_dropdown.bind("<<ComboboxSelected>>", self._save_config_values)
+            layer_frame.pack(fill="x", pady=(0, 8), anchor="w")
 
-            self.layer_sensor_vars.append(sensor_var)
-            self.layer_sensor_dropdowns.append(sensor_dropdown)
+            self.layer_feature_dropdowns[layer_number] = {}
 
-        # Save the current values after rebuilding the dynamic controls.
+            primary_frame = ttk.Frame(layer_frame)
+            primary_frame.pack(fill="x", anchor="w", pady=(0, 5))
+
+            secondary_frame = ttk.Frame(layer_frame)
+            secondary_frame.pack(fill="x", anchor="w", pady=(0, 5))
+
+            for feature_key, feature_label, options, placement in self.layer_feature_definitions:
+                dropdown = DropdownObject(
+                    primary_frame if placement == "primary" else secondary_frame,
+                    f"{feature_label} in layer {layer_number}",
+                    options,
+                    default_value=options[0],
+                    command=self._save_config_values,
+                )
+                dropdown.pack(side="left", anchor="w", padx=(0, 15), pady=(0, 5))
+                self.layer_feature_dropdowns[layer_number][feature_key] = dropdown
+
         self._save_config_values()
 
     def _save_config_values(self, event=None):
-        """Store the current dropdown selections for later use."""
-        self.config_values["ink_type"] = self.ink_var.get()
-        self.config_values["number_of_layers"] = self.layers_var.get()
+        """Store the current per-layer selections and build a reusable layer description list."""
+        self.config_values["number_of_layers"] = self.layers_dropdown.get()
 
-        # Save each layer-specific sensor selection under a dedicated key.
-        for layer_index, sensor_var in enumerate(self.layer_sensor_vars, start=1):
-            self.config_values[f"layer_{layer_index}_sensor"] = sensor_var.get()
+        layer_features = {}
+        layer_description = []
+
+        try:
+            layer_count = int(self.config_values["number_of_layers"])
+        except ValueError:
+            layer_count = 1
+
+        for layer_number in range(1, layer_count + 1):
+            feature_values = {}
+            for feature_key, feature_label, _, _ in self.layer_feature_definitions:
+                dropdown = self.layer_feature_dropdowns.get(layer_number, {}).get(feature_key)
+                if dropdown is not None:
+                    feature_values[feature_key] = dropdown.get()
+
+            layer_features[layer_number] = feature_values
+
+            description_parts = []
+            for feature_key, feature_label, _, _ in self.layer_feature_definitions:
+                if feature_key in feature_values:
+                    description_parts.append(f"{feature_label.lower()}={feature_values[feature_key]}")
+
+            layer_description.append(
+                f"Layer {layer_number}: " + ", ".join(description_parts)
+            )
+
+        self.config_values["layer_features"] = layer_features
+        self.config_values["layer_description"] = layer_description
+
+        if layer_description:
+            self.summary_var.set(" | ".join(layer_description))
+        else:
+            self.summary_var.set("No layers selected.")

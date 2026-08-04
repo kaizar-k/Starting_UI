@@ -1,5 +1,5 @@
 import tkinter as tk
-from gui.colour_scheme import BACKGROUND, TEXT_COLOUR
+from gui.page_features.colour_scheme import BACKGROUND, TEXT_COLOUR
 
 
 # This will be the parent class for all custom frame objects

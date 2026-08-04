@@ -2,8 +2,8 @@
 import tkinter as tk
 from gui.controls.z_Label import ZLabel
 from gui.frames.container_frame import ContainerFrame
-from gui.colour_scheme import TEXT_COLOUR
-from gui.colour_scheme import BACKGROUND
+from gui.page_features.colour_scheme import TEXT_COLOUR
+from gui.page_features.colour_scheme import BACKGROUND
 
 # This class is simply to contain other frames and widgets for layout simplicity
 class LabelFrame(ContainerFrame):

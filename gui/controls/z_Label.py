@@ -1,6 +1,6 @@
 import tkinter as tk
-from gui.colour_scheme import *
-from gui.font_definitions import *
+from gui.page_features.colour_scheme import *
+from gui.page_features.font_definitions import *
 
 class ZLabel(tk.Label):
     def __init__(self, master, text):
