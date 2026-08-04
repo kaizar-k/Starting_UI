@@ -27,13 +27,27 @@ class PageObject(tk.Frame):
         self.title_frame.configure(height=int(screen_height * 0.1), bg=LOGO_COLOUR)
         self.menu_frame = ContainerFrame(self)
         self.menu_frame.configure(height=int(screen_height * 0.1))
-        self.main_area_frame = ContainerFrame(self)
+
+        self.main_scroll_container = ContainerFrame(self)
+        self.main_scroll_container.configure(bg='#ffffff')
+
+        self.main_canvas = tk.Canvas(self.main_scroll_container, bg='#ffffff', highlightthickness=0)
+        self.main_scrollbar = ttk.Scrollbar(self.main_scroll_container, orient='vertical', command=self.main_canvas.yview)
+        self.main_canvas.configure(yscrollcommand=self.main_scrollbar.set)
+
+        self.main_area_frame = ContainerFrame(self.main_canvas)
         self.main_area_frame.configure(height=int(screen_height * 0.75), bg='#ffffff')
+        self.main_canvas.create_window((0, 0), window=self.main_area_frame, anchor='nw', tags=('main_area_window',))
 
         # pack layer 1
         self.title_frame.pack(side='top', fill='x')
         self.menu_frame.pack(side='top', fill='x')
-        self.main_area_frame.pack(side='top', fill='x')
+        self.main_scroll_container.pack(side='top', fill='both', expand=True)
+        self.main_canvas.pack(side='left', fill='both', expand=True)
+        self.main_scrollbar.pack(side='right', fill='y')
+
+        self.main_canvas.bind('<Configure>', self._on_canvas_configure)
+        self.main_area_frame.bind('<Configure>', self._on_content_configure)
 
         # Create only the three top navigation buttons needed for the current app flow.
         self.page_buttons = []
@@ -43,11 +57,22 @@ class PageObject(tk.Frame):
             self.page_buttons[button_num].pack(side='left', fill='both', expand=True)
 
         # Keep a popup toggle button in the title bar so the main pages can still open their popup views.
-        self.pop_up_button = ZButton(self.title_frame, text='<')
+        self.pop_up_button = ZButton(self.title_frame, text='>')
         self.pop_up_button.configure(font=TITLE_FONT)
-        self.pop_up_button.pack(side='right', fill='y', expand=False, padx=(0, 10))
+        self.pop_up_button.pack(side='left', fill='y', expand=False, padx=(10, 10))
 
         # pack title of page into title_frame
         self.title = ZLabel(self.title_frame, text=self.title_text)
-        self.title.pack(side='left', fill='both', expand=False, anchor='w')
+        self.title.pack(side='left', fill='both', expand=True, anchor='w', padx=(10, 0))
         self.title.configure(font=TITLE_FONT)
+
+    def _on_canvas_configure(self, event=None):
+        """Keep the canvas scroll region and window size in sync with the page."""
+        self.main_canvas.configure(scrollregion=self.main_canvas.bbox('all'))
+
+    def _on_content_configure(self, event=None):
+        """Resize the canvas window when the content frame changes size."""
+        canvas_width = self.main_canvas.winfo_width()
+        if canvas_width > 1:
+            self.main_canvas.itemconfigure('main_area_window', width=canvas_width)
+        self.main_canvas.configure(scrollregion=self.main_canvas.bbox('all'))

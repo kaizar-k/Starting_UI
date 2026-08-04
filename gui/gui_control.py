@@ -40,9 +40,9 @@ class TKinterApp(tk.Tk):
 
         # Place each page in the main window and configure its navigation behaviour.
         for page in self.pages:
-            # Popup pages sit on the right-hand side of the window and have their own toggle button.
+            # Popup pages open from the left-hand side so they do not overlap the main page scrollbar.
             if type(page) in (Options1Page, Options2Page):
-                page.grid(row=0, column=0, sticky='ne')
+                page.grid(row=0, column=0, sticky='nw')
                 page.pop_up_button.configure(command=partial(self.show_frame, page.pop_up_page_index))
 
             # Main pages and the configuration page share the same base layout.

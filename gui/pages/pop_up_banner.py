@@ -24,6 +24,7 @@ class PopUpObject(tk.Frame):
         self.configure(width=screen_width/self.frame_width_ratio, height=screen_height, bg=BACKGROUND)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
+        self.place(x=0, y=0)
 
         self.hide_frame_container = ContainerFrame(self)
         self.hide_frame_container.configure(width=(screen_width / self.frame_width_ratio)/10, height=screen_height)
@@ -31,11 +32,11 @@ class PopUpObject(tk.Frame):
         self.main_container.configure(width=((screen_width / self.frame_width_ratio )/ 10)*9, height=screen_height)
 
         # pack layer 2
-        self.hide_frame_container.pack(side='left', fill='y', expand=False)
         self.main_container.pack(side='left', fill='y')
+        self.hide_frame_container.pack(side='right', fill='y', expand=False)
 
         # pack a single toggle button into the parameters button frame
-        self.pop_up_button = ZButton(self.hide_frame_container, text='>')
+        self.pop_up_button = ZButton(self.hide_frame_container, text='<')
         self.pop_up_button.configure(font=TITLE_FONT)
         self.pop_up_button.pack(fill='y', expand=True)
         self.pop_up_button.configure(width=1, height=int(screen_height))
