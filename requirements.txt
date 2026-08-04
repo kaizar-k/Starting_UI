@@ -1,0 +1,3 @@
+# External dependencies for this project
+# tkinter is included with standard Python installations, so no extra package is required.
+pyserial>=3.5

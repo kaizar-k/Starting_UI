@@ -38,27 +38,17 @@ class PageObject(tk.Frame):
         self.main_area_frame.pack(side='top', fill='x')
         self.footer_frame.pack(side='top', fill='x')
 
-        # layout of main area frame - layer 2
-        self.figure_area_frame = ContainerFrame(self.main_area_frame)
-        self.figure_area_frame.configure(width=(screen_width / 40)*39, height=int(screen_height * 0.75))
-        self.parameters_button_frame = ContainerFrame(self.main_area_frame)
-        self.parameters_button_frame.configure(width=screen_width / 40, height=int(screen_height * 0.75))
-
-        # pack layer 2
-        self.figure_area_frame.pack(side='left', fill='y')
-        self.parameters_button_frame.pack(side='left', fill='y')
-
-        # pack a single toggle button into the parameters button frame
-        self.pop_up_button = ZButton(self.parameters_button_frame, text="<")
-        self.pop_up_button.configure(font=TITLE_FONT)
-        self.pop_up_button.pack(fill='both', expand=True)
-
-        # pack 3-6 buttons into the menu frame
+        # Create only the three top navigation buttons needed for the current app flow.
         self.page_buttons = []
-        for button_num in range(5):
-            self.page_buttons.append(ZButton(self.menu_frame, text=button_num))
+        for button_num in range(3):
+            self.page_buttons.append(ZButton(self.menu_frame, text=str(button_num)))
             self.page_buttons[button_num].configure(font=HEADER_FONT)
             self.page_buttons[button_num].pack(side='left', fill='both', expand=True)
+
+        # Keep a popup toggle button in the title bar so the main pages can still open their popup views.
+        self.pop_up_button = ZButton(self.title_frame, text='<')
+        self.pop_up_button.configure(font=TITLE_FONT)
+        self.pop_up_button.pack(side='right', fill='y', expand=False, padx=(0, 10))
 
         # pack title of page into title_frame
         self.title = ZLabel(self.title_frame, text=self.title_text)
