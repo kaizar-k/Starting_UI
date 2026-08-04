@@ -28,12 +28,12 @@ class TKinterApp(tk.Tk):
         # Add a couple of generic pages as placeholders.
         #we increment the page index by 2 to account for the pop-up page that is added alongside each main page
         page_index += 2 
-        self.pages.append(PageObject(self, 'Page 1', page_index, page_index + 1))
-        self.pages.append(PopUpObject(self, 'Page 1 popup', page_index, page_index + 1))
+        self.pages.append(PageObject(self, '2D Force Visualisation per Layer', page_index, page_index + 1))
+        self.pages.append(PopUpObject(self, 'Options', page_index, page_index + 1))
 
         page_index += 2
-        self.pages.append(PageObject(self, 'Page 2', page_index, page_index + 1))
-        self.pages.append(PopUpObject(self, 'Page 2 popup', page_index, page_index + 1))
+        self.pages.append(PageObject(self, '3D Force Visualisation (All Layers)', page_index, page_index + 1))
+        self.pages.append(PopUpObject(self, 'Options', page_index, page_index + 1))
 
         for page in self.pages:
             if type(page) == PopUpObject:
