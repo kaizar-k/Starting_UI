@@ -55,8 +55,9 @@ class PageObject(tk.Frame):
 
         # Create only the three top navigation buttons needed for the current app flow.
         self.page_buttons = []
-        for button_num in range(3):
-            self.page_buttons.append(ZButton(self.menu_frame, text=str(button_num)))
+        button_labels = ['Config', '2D plots', '3D plots']
+        for button_num, button_text in enumerate(button_labels):
+            self.page_buttons.append(ZButton(self.menu_frame, text=button_text))
             self.page_buttons[button_num].configure(font=HEADER_FONT)
             self.page_buttons[button_num].pack(side='left', fill='both', expand=True)
 

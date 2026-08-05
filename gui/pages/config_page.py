@@ -38,7 +38,7 @@ class ConfigPage(PageObject):
         self.layers_dropdown = DropdownObject(
             self.form_frame,
             "Number of layers",
-            [str(value) for value in range(1, 6)],
+            [str(value) for value in range(1, 9)],
             default_value="1",
             command=self._refresh_layer_inputs,
         )
@@ -53,10 +53,10 @@ class ConfigPage(PageObject):
         self.summary_label = ttk.Label(
             self.form_frame,
             textvariable=self.summary_var,
-            wraplength=600,
+            wraplength=1200,
             justify="left",
         )
-        self.summary_label.pack(anchor="w", pady=(10, 0))
+        self.summary_label.pack(fill="x", expand=True, anchor="w", pady=(10, 0))
 
         # Build the initial set of per-layer dropdowns.
         self._refresh_layer_inputs()
@@ -138,6 +138,6 @@ class ConfigPage(PageObject):
         self.config_values["layer_description"] = layer_description
 
         if layer_description:
-            self.summary_var.set(" | ".join(layer_description))
+            self.summary_var.set("\n".join(layer_description))
         else:
             self.summary_var.set("No layers selected.")
