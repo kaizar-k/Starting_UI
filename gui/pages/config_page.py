@@ -116,6 +116,9 @@ class ConfigPage(PageObject):
 
         self._save_config_values()
 
+        # Force the page canvas to recalculate its scroll region after the new layer controls are added.
+        self._schedule_scroll_region_update()
+
         # Notify any dependent pages so they can rebuild their UI from the latest layer data.
         self._notify_layer_change_observers()
 

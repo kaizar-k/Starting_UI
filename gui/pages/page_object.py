@@ -78,17 +78,24 @@ class PageObject(tk.Frame):
 
     def refresh_from_config(self):
         """Hook for pages that need to update when the config page changes."""
-        pass
+        self._schedule_scroll_region_update() #also changes the scroll region to fit the new content size
+
+    def _schedule_scroll_region_update(self):
+        """Recalculate the scroll region after the layout settles."""
+        self.after_idle(self._on_content_configure)
+        self.after(50, self._on_content_configure)
 
     def _on_content_configure(self, event=None):
         """Update the canvas scroll region from the current content size."""
         self.update_idletasks()
+        self.main_canvas.update_idletasks()
+        self.main_area_frame.update_idletasks()
 
-        canvas_width = max(self.main_canvas.winfo_width(), 1)
+        canvas_width = max(self.main_canvas.winfo_width(), self.main_area_frame.winfo_width(), 1)
         canvas_height = max(self.main_canvas.winfo_height(), 1)
 
-        content_width = max(self.main_area_frame.winfo_reqwidth(), canvas_width)
-        content_height = max(self.main_area_frame.winfo_reqheight(), canvas_height)
+        content_width = max(self.main_area_frame.winfo_reqwidth(), self.main_area_frame.winfo_width(), canvas_width)
+        content_height = max(self.main_area_frame.winfo_reqheight(), self.main_area_frame.winfo_height(), canvas_height)
 
         self.main_canvas.itemconfigure('main_area_window', width=canvas_width)
         self.main_canvas.itemconfigure('main_area_window', height=content_height)

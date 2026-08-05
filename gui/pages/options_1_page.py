@@ -20,6 +20,7 @@ class Options1Page(PopUpObject):
 
     def refresh_from_config(self):
         self._refresh_layer_checkboxes()
+        self._schedule_scroll_region_update()
 
     def _on_config_change(self, event=None):
         self._refresh_layer_checkboxes()
