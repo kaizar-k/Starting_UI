@@ -35,6 +35,13 @@ class TKinterApp(tk.Tk):
         self.pages.append(ThreeDVisualisationPage(self, '3D Force Visualisation (All Layers)', 3, 4))
         self.pages.append(Options2Page(self, 'Options 2', 4, 3))
 
+        # Register every page as an observer of the config page so a config change
+        # refreshes the rest of the app automatically, regardless of how many pages exist.
+        config_page = self.pages[0]
+        for page in self.pages[1:]:
+            if page is not config_page:
+                config_page.register_layer_change_observer(page.refresh_from_config)
+
         # Collect the main pages separately so the top navigation buttons can target them.
         main_pages = [page for page in self.pages if type(page) not in (Options1Page, Options2Page)]
 

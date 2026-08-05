@@ -29,6 +29,9 @@ class ConfigPage(PageObject):
         # Keep track of the dynamically created dropdowns for each layer and feature.
         self.layer_feature_dropdowns = {}
 
+        # Other pages can register here to be notified when the layer configuration changes.
+        self.layer_change_observers = []
+
         # Create a simple form area inside the main content frame.
         self.form_frame = ttk.Frame(self.main_area_frame, padding=20)
         self.form_frame.pack(fill="both", expand=True, padx=20, pady=20)
@@ -60,6 +63,15 @@ class ConfigPage(PageObject):
 
         # Build the initial set of per-layer dropdowns.
         self._refresh_layer_inputs()
+
+    def register_layer_change_observer(self, callback):
+        """Register a callback to be called whenever the layer configuration changes."""
+        self.layer_change_observers.append(callback)
+
+    def _notify_layer_change_observers(self):
+        """Tell every registered page to refresh itself after the layer setup changes."""
+        for callback in self.layer_change_observers:
+            callback()
 
     def _refresh_layer_inputs(self, event=None):
         """Clear and recreate the per-layer feature dropdowns based on the selected layer count."""
@@ -103,6 +115,9 @@ class ConfigPage(PageObject):
                 self.layer_feature_dropdowns[layer_number][feature_key] = dropdown
 
         self._save_config_values()
+
+        # Notify any dependent pages so they can rebuild their UI from the latest layer data.
+        self._notify_layer_change_observers()
 
     def _save_config_values(self, event=None):
         """Store the current per-layer selections and build a reusable layer description list."""

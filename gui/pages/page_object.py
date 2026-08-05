@@ -76,6 +76,10 @@ class PageObject(tk.Frame):
         self.title.pack(side='left', fill='both', expand=True, anchor='w', padx=(8, 0))
         self.title.configure(font=TITLE_FONT)
 
+    def refresh_from_config(self):
+        """Hook for pages that need to update when the config page changes."""
+        pass
+
     def _on_content_configure(self, event=None):
         """Update the canvas scroll region from the current content size."""
         self.update_idletasks()
