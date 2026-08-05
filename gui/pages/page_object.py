@@ -83,12 +83,16 @@ class PageObject(tk.Frame):
 
     def _on_content_configure(self, event=None):
         """Resize the canvas window when the content frame changes size."""
+        self.update_idletasks()
+
         canvas_width = self.main_canvas.winfo_width()
         canvas_height = self.main_canvas.winfo_height()
 
-        if canvas_width > 1:
-            self.main_canvas.itemconfigure('main_area_window', width=canvas_width)
-
+        required_width = max(self.main_area_frame.winfo_reqwidth(), canvas_width)
         required_height = max(self.main_area_frame.winfo_reqheight(), canvas_height)
+
+        if canvas_width > 1:
+            self.main_canvas.itemconfigure('main_area_window', width=required_width)
+
         self.main_canvas.itemconfigure('main_area_window', height=required_height)
-        self.main_canvas.configure(scrollregion=self.main_canvas.bbox('all'))
+        self.main_canvas.configure(scrollregion=(0, 0, required_width, required_height))
