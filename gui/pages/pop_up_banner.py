@@ -21,17 +21,18 @@ class PopUpObject(tk.Frame):
         screen_height = self.winfo_screenheight()
         screen_width = self.winfo_screenwidth()
 
-        self.configure(width=screen_width/self.frame_width_ratio, height=screen_height, bg=BACKGROUND)
+        popup_width = screen_width / self.frame_width_ratio
+        self.configure(width=popup_width, height=screen_height, bg=BACKGROUND)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.place(x=0, y=0)
 
         self.hide_frame_container = ContainerFrame(self)
-        self.hide_frame_container.configure(width=(screen_width / self.frame_width_ratio)/10, height=screen_height)
+        self.hide_frame_container.configure(width=(popup_width / 10), height=screen_height)
         self.main_container = ContainerFrame(self)
-        self.main_container.configure(width=((screen_width / self.frame_width_ratio )/ 10)*9, height=screen_height)
+        self.main_container.configure(width=(popup_width / 10) * 9, height=screen_height)
 
-        # pack layer 2
+        # Keep the popup content area fixed-width and anchored to the top.
         self.main_container.pack(side='left', fill='y')
         self.hide_frame_container.pack(side='right', fill='y', expand=False)
 
@@ -51,12 +52,11 @@ class PopUpObject(tk.Frame):
         self.title_frame = ContainerFrame(self.main_container)
         self.main_area_frame = ContainerFrame(self.main_container)
 
-        # pack layer 2
-        self.title_frame.pack(side='top', fill='x', expand=True)
+        self.title_frame.pack(side='top', fill='x')
         self.main_area_frame.pack(side='top', fill='both', expand=True)
 
-        self.main_area_frame.configure(width=((screen_width / self.frame_width_ratio )/ 10)*9, height=screen_height)
+        self.main_area_frame.configure(width=(popup_width / 10) * 9, height=screen_height)
 
-        # pack title of page into title_frame
+        # Keep the title area at the top and prevent content from changing the popup width.
         self.title = LabelFrame(self.title_frame, label_text=self.title_text)
-        self.title.pack(side='top', fill='both', expand=True, anchor='w')
+        self.title.pack(side='top', fill='x', anchor='w')
