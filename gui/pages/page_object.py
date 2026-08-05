@@ -39,19 +39,18 @@ class PageObject(tk.Frame):
         self.main_canvas.configure(yscrollcommand=self.main_scrollbar.set)
 
         self.main_area_frame = ContainerFrame(self.main_canvas)
-        self.main_area_frame.configure(height=int(screen_height * 0.75), bg=BACKGROUND)
+        self.main_area_frame.configure(bg=BACKGROUND)
         self.main_canvas.create_window((0, 0), window=self.main_area_frame, anchor='nw', tags=('main_area_window',))
 
-        # pack layer 1
         self.title_frame.pack(side='top', fill='x')
         self.menu_frame.pack(side='top', fill='x')
         self.main_scroll_container.pack(side='top', fill='both', expand=True)
         self.main_canvas.pack(side='left', fill='both', expand=True)
         self.main_scrollbar.pack(side='right', fill='y')
 
-        self.main_canvas.bind('<Configure>', self._on_canvas_configure)
+        self.main_canvas.bind('<Configure>', self._on_content_configure)
         self.main_area_frame.bind('<Configure>', self._on_content_configure)
-        self.after(50, self._on_content_configure)
+        self.after(100, self._on_content_configure)
 
         # Create only the three top navigation buttons needed for the current app flow.
         self.page_buttons = []
@@ -77,22 +76,16 @@ class PageObject(tk.Frame):
         self.title.pack(side='left', fill='both', expand=True, anchor='w', padx=(8, 0))
         self.title.configure(font=TITLE_FONT)
 
-    def _on_canvas_configure(self, event=None):
-        """Keep the canvas scroll region and window size in sync with the page."""
-        self._on_content_configure(event)
-
     def _on_content_configure(self, event=None):
-        """Resize the canvas window when the content frame changes size."""
+        """Update the canvas scroll region from the current content size."""
         self.update_idletasks()
 
-        canvas_width = self.main_canvas.winfo_width()
-        canvas_height = self.main_canvas.winfo_height()
+        canvas_width = max(self.main_canvas.winfo_width(), 1)
+        canvas_height = max(self.main_canvas.winfo_height(), 1)
 
-        required_width = max(self.main_area_frame.winfo_reqwidth(), canvas_width)
-        required_height = max(self.main_area_frame.winfo_reqheight(), canvas_height)
+        content_width = max(self.main_area_frame.winfo_reqwidth(), canvas_width)
+        content_height = max(self.main_area_frame.winfo_reqheight(), canvas_height)
 
-        if canvas_width > 1:
-            self.main_canvas.itemconfigure('main_area_window', width=required_width)
-
-        self.main_canvas.itemconfigure('main_area_window', height=required_height)
-        self.main_canvas.configure(scrollregion=(0, 0, required_width, required_height))
+        self.main_canvas.itemconfigure('main_area_window', width=canvas_width)
+        self.main_canvas.itemconfigure('main_area_window', height=content_height)
+        self.main_canvas.configure(scrollregion=(0, 0, content_width, content_height))
