@@ -1,6 +1,6 @@
 # import stuff needed from other files
 import tkinter as tk
-from gui.controls.z_Label import ZLabel
+from gui.controls.label import Label
 from gui.frames.container_frame import ContainerFrame
 from gui.page_features.colour_scheme import TEXT_COLOUR
 from gui.page_features.colour_scheme import BACKGROUND
@@ -13,7 +13,7 @@ class LabelFrame(ContainerFrame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        self.label = ZLabel(self, text=label_text)
+        self.label = Label(self, text=label_text)
         self.label.pack(side='top', fill='both', expand=True, anchor='w')
 
         self.content = ContainerFrame(self)

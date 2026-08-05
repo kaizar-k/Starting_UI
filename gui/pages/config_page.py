@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from gui.page_features.dropdown_object import DropdownObject
+from gui.controls.dropdown_object import DropdownObject
 from gui.pages.page_object import PageObject
 
 

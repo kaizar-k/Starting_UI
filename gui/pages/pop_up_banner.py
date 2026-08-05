@@ -1,7 +1,7 @@
 import tkinter as tk
 
-from gui.controls.z_Label import ZLabel
-from gui.controls.z_button import ZButton
+from gui.controls.label import Label
+from gui.controls.button import Button
 from gui.frames.container_frame import ContainerFrame
 from gui.page_features.colour_scheme import *
 from gui.page_features.font_definitions import *
@@ -36,7 +36,7 @@ class PopUpObject(tk.Frame):
         self.hide_frame_container.pack(side='right', fill='y', expand=False)
 
         # pack a single toggle button into the parameters button frame
-        self.pop_up_button = ZButton(self.hide_frame_container, text='<')
+        self.pop_up_button = Button(self.hide_frame_container, text='<')
         self.pop_up_button.configure(
             font=TITLE_FONT,
             bg=HIGHLIGHT,

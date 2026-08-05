@@ -3,8 +3,8 @@ from tkinter import ttk
 from tkinter import font as tkFont
 
 from gui.page_features.colour_scheme import BACKGROUND, LOGO_COLOUR, HIGHLIGHT, TEXT_COLOUR
-from gui.controls.z_Label import ZLabel
-from gui.controls.z_button import ZButton
+from gui.controls.label import Label
+from gui.controls.button import Button
 from gui.page_features.font_definitions import TITLE_FONT, HEADER_FONT
 from gui.frames.container_frame import ContainerFrame
 
@@ -57,12 +57,12 @@ class PageObject(tk.Frame):
         self.page_buttons = []
         button_labels = ['Config', '2D plots', '3D plots']
         for button_num, button_text in enumerate(button_labels):
-            self.page_buttons.append(ZButton(self.menu_frame, text=button_text))
+            self.page_buttons.append(Button(self.menu_frame, text=button_text))
             self.page_buttons[button_num].configure(font=HEADER_FONT)
             self.page_buttons[button_num].pack(side='left', fill='both', expand=True)
 
         # Keep a popup toggle button in the title bar so the main pages can still open their popup views.
-        self.pop_up_button = ZButton(self.title_frame, text='>')
+        self.pop_up_button = Button(self.title_frame, text='>')
         self.pop_up_button.configure(
             font=TITLE_FONT,
             bg=HIGHLIGHT,
@@ -73,7 +73,7 @@ class PageObject(tk.Frame):
         self.pop_up_button.pack(side='left', fill='y', expand=False, padx=(8, 8))
 
         # pack title of page into title_frame
-        self.title = ZLabel(self.title_frame, text=self.title_text)
+        self.title = Label(self.title_frame, text=self.title_text)
         self.title.pack(side='left', fill='both', expand=True, anchor='w', padx=(8, 0))
         self.title.configure(font=TITLE_FONT)
 

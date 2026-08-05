@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from gui.controls.z_Label import ZLabel
+from gui.controls.label import Label
 
 
 class DropdownObject(ttk.Frame):
@@ -10,7 +10,7 @@ class DropdownObject(ttk.Frame):
     def __init__(self, parent, label_text, options, default_value=None, width=20, command=None):
         super().__init__(parent)
 
-        self.label = ZLabel(self, text=label_text)
+        self.label = Label(self, text=label_text)
         self.label.pack(anchor="w", pady=(0, 5))
 
         selected_value = default_value if default_value is not None else options[0]

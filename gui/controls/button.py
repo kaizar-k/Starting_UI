@@ -2,7 +2,8 @@ import tkinter as tk
 from gui.page_features.colour_scheme import *
 from gui.page_features.font_definitions import *
 
-class ZButton(tk.Button):
+
+class Button(tk.Button):
     def __init__(self, master, text):
         super().__init__(master)
         self.configure(
