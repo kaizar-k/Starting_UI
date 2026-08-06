@@ -16,6 +16,8 @@ class ConfigPage(PageObject):
             "number_of_layers": "1",
             "layer_features": {},
             "layer_description": [],
+            # Store the layers selected in the options popup so other pages can read them.
+            "options_1_selected_layers": [],
         }
 
         # Define the per-layer features that should be editable for each layer.
