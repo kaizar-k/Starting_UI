@@ -52,9 +52,9 @@ class PageObject(tk.Frame):
         self.main_area_frame.bind('<Configure>', self._on_content_configure)
         self.after(100, self._on_content_configure)
 
-        # Create only the three top navigation buttons needed for the current app flow.
+        # Create the top navigation buttons needed for the current app flow.
         self.page_buttons = []
-        button_labels = ['Config', '2D plots', '3D plots']
+        button_labels = ['Config', '2D plots', '3D plots', 'Add/remove']
         for button_num, button_text in enumerate(button_labels):
             self.page_buttons.append(Button(self.menu_frame, text=button_text))
             self.page_buttons[button_num].configure(font=HEADER_FONT)

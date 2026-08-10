@@ -16,9 +16,10 @@ class TKinterApp(tk.Tk):
         from gui.pages.three_d_visualisation_page import ThreeDVisualisationPage
         from gui.pages.options_1_page import Options1Page
         from gui.pages.options_2_page import Options2Page
+        from gui.pages.add_remove_page import AddRemovePage
 
         # Set the window title and make the app fill the full screen.
-        self.title('DZP Sensor Force Visualisation Tool')
+        self.title('DZP Sensor Visualisation Tool')
         self.geometry(f'{self.winfo_screenwidth()}x{self.winfo_screenheight()}+{0}+{0}')
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -29,11 +30,12 @@ class TKinterApp(tk.Tk):
         # Create the configuration screen first. It is the default landing page.
         self.pages.append(ConfigPage(self, 'Configuration', 0, 0))
 
-        # Add the main visualisation pages and their popup companions.
+        # Add the main visualisation pages, the new configuration-management page, and their popup companions.
         self.pages.append(TwoDVisualisationPage(self, '2D Force Visualisation per Layer', 1, 2))
         self.pages.append(Options1Page(self, 'Options 1', 2, 1))
         self.pages.append(ThreeDVisualisationPage(self, '3D Force Visualisation (All Layers)', 3, 4))
-        self.pages.append(Options2Page(self, 'Options 2', 4, 3))
+        self.pages.append(AddRemovePage(self, 'Add/remove configurations', 4, 5))
+        self.pages.append(Options2Page(self, 'Options 2', 5, 3))
 
         # Register every page as an observer of the config page so a config change
         # refreshes the rest of the app automatically, regardless of how many pages exist.
@@ -57,8 +59,8 @@ class TKinterApp(tk.Tk):
                 page.grid(row=0, column=0, sticky='nsew')
                 page.title.configure(bg=LOGO_COLOUR)
 
-                # The configuration page does not need the popup toggle button.
-                if type(page) == ConfigPage:
+                # The configuration page and the add/remove page do not need the popup toggle button.
+                if type(page) in (ConfigPage, AddRemovePage):
                     page.pop_up_button.pack_forget()
                 else:
                     page.pop_up_button.configure(command=partial(self.show_frame, page.pop_up_page_index))
