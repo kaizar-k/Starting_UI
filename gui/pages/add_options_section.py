@@ -23,7 +23,7 @@ class AddOptionsSection(ttk.LabelFrame):
         input_frame = ttk.Frame(self)
         input_frame.pack(fill="x", anchor="w")
 
-        for category_name in ["Sensor type", "AC/DC", "Substrate", "Graphene", "Coating"]:
+        for category_name in self.category_options.keys():
             row_frame = ttk.Frame(input_frame)
             row_frame.pack(fill="x", pady=2, anchor="w")
 

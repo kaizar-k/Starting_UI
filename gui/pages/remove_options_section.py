@@ -25,7 +25,7 @@ class RemoveOptionsSection(ttk.LabelFrame):
         controls_frame = ttk.Frame(self)
         controls_frame.pack(fill="x", anchor="w")
 
-        for category_name in ["Sensor type", "Substrate", "Coating", "Graphene"]:
+        for category_name in self.category_options.keys():
             dropdown = DropdownObject(
                 controls_frame,
                 category_name,

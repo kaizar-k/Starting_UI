@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
+from backend.creating_dropdowns import DropdownData
 from gui.pages.add_config_section import AddConfigSection
 from gui.pages.add_options_section import AddOptionsSection
 from gui.pages.page_object import PageObject
@@ -14,13 +15,9 @@ class AddRemovePage(PageObject):
     def __init__(self, master, title_text, page_index, pop_up_index):
         super().__init__(master, title_text, page_index, pop_up_index)
 
-        self.category_options = {
-            "Sensor type": ["loop"],
-            "AC/DC": ["AC", "DC"],
-            "Substrate": ["substrate 1"],
-            "Graphene": ["graphene 1"],
-            "Coating": ["coating 1"],
-        }
+        dropdown_data = DropdownData()
+        self.category_names = dropdown_data.get_category_names()
+        self.category_options = dropdown_data.get_options_by_category()
 
         self.form_frame = ttk.Frame(self.main_area_frame, padding=20)
         self.form_frame.pack(fill="both", expand=True, padx=20, pady=20)

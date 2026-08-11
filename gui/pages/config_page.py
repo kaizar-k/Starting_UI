@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
+from backend.creating_dropdowns import DropdownData
 from gui.controls.dropdown_object import DropdownObject
 from gui.pages.page_object import PageObject
 
@@ -20,13 +21,18 @@ class ConfigPage(PageObject):
             "options_1_selected_layers": [],
         }
 
+        dropdown_data = DropdownData()
+        self.category_names = dropdown_data.get_category_names()
+        self.category_options = dropdown_data.get_options_by_category()
+
         # Define the per-layer features that should be editable for each layer.
-        # Add new entries with placement="secondary" if you want them to appear in the
-        # side column for extra layer descriptions.
-        self.layer_feature_definitions = [
-            ("sensor", "Sensor", ["Type A", "Type B", "Type C"], "primary"),
-            ("ink", "Ink", ["Ink A", "Ink B", "Ink C"], "primary"),
-        ]
+        # Each feature uses the CSV-backed category names and their available options.
+        self.layer_feature_definitions = []
+        for category_name in self.category_names:
+            options = list(self.category_options.get(category_name, []))
+            if not options:
+                options = [""]
+            self.layer_feature_definitions.append((category_name.lower().replace(" ", "_"), category_name, options, "primary"))
 
         # Keep track of the dynamically created dropdowns for each layer and feature.
         self.layer_feature_dropdowns = {}
@@ -108,7 +114,7 @@ class ConfigPage(PageObject):
             for feature_key, feature_label, options, placement in self.layer_feature_definitions:
                 dropdown = DropdownObject(
                     primary_frame if placement == "primary" else secondary_frame,
-                    f"{feature_label} in layer {layer_number}",
+                    feature_label,
                     options,
                     default_value=options[0],
                     command=self._save_config_values,
