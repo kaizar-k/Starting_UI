@@ -1,2 +1,11 @@
 configuration_name,AC/DC,Sensor Type,Substrate,Graphene,Coating,calibration_regimes
-example_config,AC,loop,substrate 1,graphene 1,coating 1,regime 1
+example1,AC,loop,substrate 1,graphene 1,coating 1,regime 1
+example2,AC,loop,substrate 2,graphene 2,coating 2,regime 2
+example3,AC,loop,substrate 1,graphene 3,coating 3,regime 3
+example4,DC,loop,substrate 2,graphene 1,coating 2,regime 4
+example5,AC,loop,substrate 3,graphene 2,coating 3,regime 5
+example6,DC,loop,substrate 1,graphene 3,coating 1,regime 6
+example7,AC,loop,substrate 2,graphene 1,coating 3,regime 7
+example8,DC,loop,substrate 3,graphene 2,coating 2,regime 8
+example9,AC,loop,substrate 1,graphene 3,coating 2,regime 9
+example10,DC,loop,substrate 2,graphene 2,coating 1,regime 10

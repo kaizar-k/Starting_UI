@@ -26,11 +26,12 @@ class AddConfigSection(ttk.LabelFrame):
 
         for category_name in self.category_options.keys():
             options = self._get_category_options(category_name)
+            dropdown_options = ["No selection"] + options
             dropdown = DropdownObject(
                 controls_frame,
                 category_name,
-                options,
-                default_value=options[0] if options else "",
+                dropdown_options,
+                default_value="No selection",
                 width=18 if category_name != "AC/DC" else 12,
             )
             dropdown.pack(side="left", padx=(0, 12), anchor="n")
@@ -42,6 +43,6 @@ class AddConfigSection(ttk.LabelFrame):
     def refresh(self):
         for category_name, dropdown in self.dropdown_widgets.items():
             options = self._get_category_options(category_name)
-            dropdown.dropdown.configure(values=options)
-            if options:
-                dropdown.set(options[0])
+            dropdown_options = ["No selection"] + options
+            dropdown.dropdown.configure(values=dropdown_options)
+            dropdown.set("No selection")

@@ -61,6 +61,33 @@ class DropdownData:
 
         return options_by_category
 
+    def get_used_options_by_category(self) -> Dict[str, List[str]]:
+        """Return the option values that are currently referenced by saved configurations."""
+        if not self.configurations_csv_path.exists():
+            return {}
+
+        try:
+            df = pd.read_csv(self.configurations_csv_path)
+        except Exception:
+            return {}
+
+        used_options_by_category: Dict[str, List[str]] = {}
+        for column in df.columns:
+            column_name = str(column).strip()
+            if not column_name or column_name in {"configuration_name", "calibration_regimes"}:
+                continue
+
+            values = []
+            for value in df[column_name].dropna():
+                option_value = str(value).strip()
+                if option_value and option_value not in values:
+                    values.append(option_value)
+
+            if values:
+                used_options_by_category[column_name] = values
+
+        return used_options_by_category
+
     def save_options_by_category(self, options_by_category: Dict[str, List[str]]) -> None:
         """Write the current options mapping back to options.csv."""
         # Convert the in-memory category->options mapping into row-based CSV data.

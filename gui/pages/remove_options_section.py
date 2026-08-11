@@ -14,6 +14,7 @@ class RemoveOptionsSection(ttk.LabelFrame):
         self.refresh_callback = refresh_callback
         self.dropdown_widgets = {}
         self.dropdown_data = DropdownData()
+        self.used_options_by_category = self.dropdown_data.get_used_options_by_category()
 
         self.pack(fill="x", pady=(0, 12), anchor="w")
 
@@ -38,6 +39,15 @@ class RemoveOptionsSection(ttk.LabelFrame):
             dropdown.pack(side="left", padx=(0, 12), anchor="n")
             self.dropdown_widgets[category_name] = dropdown
 
+        self.warning_label = ttk.Label(
+            self,
+            text="",
+            foreground="red",
+            wraplength=1000,
+            justify="left",
+        )
+        self.warning_label.pack(anchor="w", pady=(8, 0))
+
         save_button = ttk.Button(self, text="Save choices", command=self._save_removed_options)
         save_button.pack(anchor="e", pady=(8, 0))
 
@@ -46,10 +56,22 @@ class RemoveOptionsSection(ttk.LabelFrame):
         return ["No selection"] + options
 
     def _save_removed_options(self):
+        self.warning_label.config(text="")
+
         for category_name, dropdown in self.dropdown_widgets.items():
             selected_value = dropdown.get()
             if not selected_value or selected_value == "No selection":
                 continue
+
+            used_values = self.used_options_by_category.get(category_name, [])
+            if selected_value in used_values:
+                self.warning_label.config(
+                    text=(
+                        f"Warning: '{selected_value}' is currently used in one or more configuration presets "
+                        f"for {category_name}. Remove or update those presets first."
+                    )
+                )
+                return
 
             options = self.category_options.get(category_name, [])
             if selected_value in options:
@@ -58,11 +80,14 @@ class RemoveOptionsSection(ttk.LabelFrame):
         # Save the updated option lists back to disk and reload them immediately.
         self.dropdown_data.save_options_by_category(self.category_options)
         self.category_options.update(self.dropdown_data.get_options_by_category())
+        self.used_options_by_category = self.dropdown_data.get_used_options_by_category()
 
         if self.refresh_callback is not None:
             self.refresh_callback()
 
     def refresh(self):
+        self.used_options_by_category = self.dropdown_data.get_used_options_by_category()
         for category_name, dropdown in self.dropdown_widgets.items():
             dropdown.dropdown.configure(values=self._get_remove_options(category_name))
             dropdown.set("No selection")
+            self.warning_label.config(text="")

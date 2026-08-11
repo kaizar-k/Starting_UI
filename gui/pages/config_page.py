@@ -32,7 +32,7 @@ class ConfigPage(PageObject):
             options = list(self.category_options.get(category_name, []))
             if not options:
                 options = [""]
-            self.layer_feature_definitions.append((category_name.lower().replace(" ", "_"), category_name, options, "primary"))
+            self.layer_feature_definitions.append((category_name.lower().replace(" ", "_"), category_name, ["No selection"] + options, "primary"))
 
         # Keep track of the dynamically created dropdowns for each layer and feature.
         self.layer_feature_dropdowns = {}
@@ -116,7 +116,7 @@ class ConfigPage(PageObject):
                     primary_frame if placement == "primary" else secondary_frame,
                     feature_label,
                     options,
-                    default_value=options[0],
+                    default_value="No selection",
                     command=self._save_config_values,
                 )
                 dropdown.pack(side="left", anchor="w", padx=(0, 15), pady=(0, 5))
