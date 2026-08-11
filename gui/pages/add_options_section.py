@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 
+from backend.dropdown_data import DropdownData
+
 
 class AddOptionsSection(ttk.LabelFrame):
     """Section for adding new values to the dropdown option lists."""
@@ -10,6 +12,8 @@ class AddOptionsSection(ttk.LabelFrame):
         self.category_options = category_options
         self.refresh_callback = refresh_callback
         self.option_entries = {}
+        # Use the backend helper to persist new options to the CSV file.
+        self.dropdown_data = DropdownData()
 
         self.pack(fill="x", pady=(0, 12), anchor="w")
 
@@ -46,6 +50,10 @@ class AddOptionsSection(ttk.LabelFrame):
                 options.append(new_value)
 
             entry.delete(0, tk.END)
+
+        # Save the updated option list to disk and then reload it so the UI updates immediately.
+        self.dropdown_data.save_options_by_category(self.category_options)
+        self.category_options.update(self.dropdown_data.get_options_by_category())
 
         if self.refresh_callback is not None:
             self.refresh_callback()

@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
+from backend.dropdown_data import DropdownData
 from gui.controls.dropdown_object import DropdownObject
 
 
@@ -12,6 +13,7 @@ class RemoveOptionsSection(ttk.LabelFrame):
         self.category_options = category_options
         self.refresh_callback = refresh_callback
         self.dropdown_widgets = {}
+        self.dropdown_data = DropdownData()
 
         self.pack(fill="x", pady=(0, 12), anchor="w")
 
@@ -52,6 +54,10 @@ class RemoveOptionsSection(ttk.LabelFrame):
             options = self.category_options.get(category_name, [])
             if selected_value in options:
                 options.remove(selected_value)
+
+        # Save the updated option lists back to disk and reload them immediately.
+        self.dropdown_data.save_options_by_category(self.category_options)
+        self.category_options.update(self.dropdown_data.get_options_by_category())
 
         if self.refresh_callback is not None:
             self.refresh_callback()

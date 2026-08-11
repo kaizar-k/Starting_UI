@@ -60,3 +60,15 @@ class DropdownData:
                 options_by_category[category_name].append(option_value)
 
         return options_by_category
+
+    def save_options_by_category(self, options_by_category: Dict[str, List[str]]) -> None:
+        """Write the current options mapping back to options.csv."""
+        # Convert the in-memory category->options mapping into row-based CSV data.
+        rows = []
+        for category_name, options in options_by_category.items():
+            for option_value in options:
+                rows.append({"category": category_name, "value": option_value})
+
+        # Save the rows to disk so the values persist after closing the app.
+        df = pd.DataFrame(rows, columns=["category", "value"])
+        df.to_csv(self.options_csv_path, index=False)
