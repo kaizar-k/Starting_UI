@@ -2,6 +2,10 @@ category,value
 AC/DC,AC
 AC/DC,DC
 Sensor Type,loop
+Sensor Type,rectangle
+Sensor Type,square
+Sensor Type,hi
+Sensor Type,yoooooo
 Substrate,substrate 1
 Substrate,substrate 2
 Substrate,substrate 3

@@ -88,6 +88,85 @@ class DropdownData:
 
         return used_options_by_category
 
+    def get_configuration_values_by_name(self, configuration_name: str) -> Dict[str, str]:
+        """Return the full row for a configuration preset, keyed by column name."""
+        if not configuration_name:
+            return {}
+
+        if not self.configurations_csv_path.exists():
+            return {}
+
+        try:
+            df = pd.read_csv(self.configurations_csv_path)
+        except Exception:
+            return {}
+
+        matching_row = df[df["configuration_name"].astype(str).str.strip() == configuration_name.strip()]
+        if matching_row.empty:
+            return {}
+
+        row = matching_row.iloc[0].to_dict()
+        return {str(key).strip(): "" if pd.isna(value) else str(value).strip() for key, value in row.items()}
+
+    def find_configuration_name_for_values(self, selected_values: Dict[str, str]) -> str | None:
+        """Return the preset name whose column values match the provided selected values."""
+        if not self.configurations_csv_path.exists():
+            return None
+
+        try:
+            df = pd.read_csv(self.configurations_csv_path)
+        except Exception:
+            return None
+
+        if df.empty:
+            return None
+
+        candidate_columns = [
+            column_name
+            for column_name in df.columns
+            if column_name and column_name not in {"configuration_name", "calibration_regimes"}
+        ]
+
+        for _, row in df.iterrows():
+            matches = True
+            for column_name in candidate_columns:
+                if column_name not in selected_values:
+                    continue
+                actual_value = str(row.get(column_name, "")).strip()
+                expected_value = str(selected_values[column_name]).strip()
+                if actual_value != expected_value:
+                    matches = False
+                    break
+
+            if matches:
+                name_value = str(row.get("configuration_name", "")).strip()
+                if name_value:
+                    return name_value
+
+        return None
+
+    def delete_configuration_by_name(self, configuration_name: str) -> bool:
+        """Delete the configuration preset with the given name and return whether it existed."""
+        if not configuration_name:
+            return False
+
+        if not self.configurations_csv_path.exists():
+            return False
+
+        try:
+            df = pd.read_csv(self.configurations_csv_path)
+        except Exception:
+            return False
+
+        original_count = len(df)
+        filtered_df = df[df["configuration_name"].astype(str).str.strip() != configuration_name.strip()]
+
+        if len(filtered_df) == original_count:
+            return False
+
+        filtered_df.to_csv(self.configurations_csv_path, index=False)
+        return True
+
     def save_options_by_category(self, options_by_category: Dict[str, List[str]]) -> None:
         """Write the current options mapping back to options.csv."""
         # Convert the in-memory category->options mapping into row-based CSV data.

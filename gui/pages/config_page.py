@@ -6,6 +6,19 @@ from gui.controls.dropdown_object import DropdownObject
 from gui.pages.page_object import PageObject
 
 
+def build_layer_feature_definitions(category_names, category_options):
+    """Build the layer feature definitions from the current CSV-backed categories and options."""
+    layer_feature_definitions = []
+    for category_name in category_names:
+        options = list(category_options.get(category_name, []))
+        if not options:
+            options = [""]
+        layer_feature_definitions.append(
+            (category_name.lower().replace(" ", "_"), category_name, ["No selection"] + options, "primary")
+        )
+    return layer_feature_definitions
+
+
 class ConfigPage(PageObject):
     """Configuration page with dynamically generated per-layer feature controls."""
 
@@ -21,25 +34,21 @@ class ConfigPage(PageObject):
             "options_1_selected_layers": [],
         }
 
-        dropdown_data = DropdownData()
-        self.category_names = dropdown_data.get_category_names()
-        self.category_options = dropdown_data.get_options_by_category()
+        self.dropdown_data = DropdownData()
+        self.category_names = self.dropdown_data.get_category_names()
+        self.category_options = self.dropdown_data.get_options_by_category()
 
         # Define the per-layer features that should be editable for each layer.
         # Each feature uses the CSV-backed category names and their available options.
-        self.layer_feature_definitions = []
-        for category_name in self.category_names:
-            options = list(self.category_options.get(category_name, []))
-            if not options:
-                options = [""]
-            self.layer_feature_definitions.append((category_name.lower().replace(" ", "_"), category_name, ["No selection"] + options, "primary"))
+        self.layer_feature_definitions = build_layer_feature_definitions(self.category_names, self.category_options)
 
         # Keep track of the dynamically created dropdowns for each layer and feature.
         self.layer_feature_dropdowns = {}
+        self.layer_config_name_dropdowns = {}
+        self.layer_warning_vars = {}
 
         # Other pages can register here to be notified when the layer configuration changes.
         self.layer_change_observers = []
-
         # Create a simple form area inside the main content frame.
         self.form_frame = ttk.Frame(self.main_area_frame, padding=20)
         self.form_frame.pack(fill="both", expand=True, padx=20, pady=20)
@@ -81,6 +90,86 @@ class ConfigPage(PageObject):
         for callback in self.layer_change_observers:
             callback()
 
+    def refresh_from_config(self):
+        """Reload the CSV-backed categories and options when the add/remove page changes them."""
+        self.category_names = self.dropdown_data.get_category_names()
+        self.category_options = self.dropdown_data.get_options_by_category()
+        self.layer_feature_definitions = build_layer_feature_definitions(self.category_names, self.category_options)
+        self._refresh_layer_inputs()
+
+    def _get_configuration_names(self):
+        """Return the saved configuration names with a No selection placeholder."""
+        try:
+            df = self.dropdown_data.configurations_csv_path
+            if not df.exists():
+                return ["No selection"]
+            import pandas as pd
+            configuration_df = pd.read_csv(df)
+        except Exception:
+            return ["No selection"]
+
+        names = configuration_df["configuration_name"].fillna("").astype(str).str.strip().tolist()
+        unique_names = []
+        for name in names:
+            if name and name not in unique_names:
+                unique_names.append(name)
+        return ["No selection"] + unique_names
+
+    def _handle_configuration_name_selection(self, layer_number, event=None):
+        """When a preset is chosen, fill the layer's manual dropdowns from that configuration."""
+        selected_name = self.layer_config_name_dropdowns[layer_number].get()
+        warning_var = self.layer_warning_vars.get(layer_number)
+        if warning_var is None:
+            return
+
+        if not selected_name or selected_name == "No selection":
+            warning_var.set("")
+            return
+
+        values = self.dropdown_data.get_configuration_values_by_name(selected_name)
+        if not values:
+            warning_var.set("Configuration selected for this layer: No selection")
+            return
+
+        warning_var.set(f"Configuration selected for this layer: {selected_name}")
+        for feature_key, feature_label, _, _ in self.layer_feature_definitions:
+            dropdown = self.layer_feature_dropdowns.get(layer_number, {}).get(feature_key)
+            if dropdown is None:
+                continue
+            option_value = values.get(feature_label, "No selection")
+            dropdown.set(option_value if option_value else "No selection")
+
+        self._save_config_values()
+
+    def _handle_manual_selection(self, layer_number, event=None):
+        """When a manual category value changes, resolve the matching preset name for that layer."""
+        selected_values = {}
+        for feature_key, feature_label, _, _ in self.layer_feature_definitions:
+            dropdown = self.layer_feature_dropdowns.get(layer_number, {}).get(feature_key)
+            if dropdown is None:
+                continue
+            value = dropdown.get()
+            if value and value != "No selection":
+                selected_values[feature_label] = value
+
+        warning_var = self.layer_warning_vars.get(layer_number)
+        if warning_var is None:
+            return
+
+        if not selected_values:
+            warning_var.set("")
+            return
+
+        matched_name = self.dropdown_data.find_configuration_name_for_values(selected_values)
+        if matched_name is None:
+            warning_var.set("Configuration selected for this layer: No configuration. No matching configuration found")
+            self.layer_config_name_dropdowns[layer_number].set("No selection")
+            return
+
+        warning_var.set(f"Configuration selected for this layer: {matched_name}")
+        self.layer_config_name_dropdowns[layer_number].set(matched_name)
+        self._save_config_values()
+
     def _refresh_layer_inputs(self, event=None):
         """Clear and recreate the per-layer feature dropdowns based on the selected layer count."""
         for widget in self.layer_feature_frame.winfo_children():
@@ -104,23 +193,48 @@ class ConfigPage(PageObject):
             layer_frame.pack(fill="x", pady=(0, 8), anchor="w")
 
             self.layer_feature_dropdowns[layer_number] = {}
+            self.layer_warning_vars[layer_number] = tk.StringVar(value="")
 
-            primary_frame = ttk.Frame(layer_frame)
-            primary_frame.pack(fill="x", anchor="w", pady=(0, 5))
+            selection_frame = ttk.Frame(layer_frame)
+            selection_frame.pack(fill="x", anchor="w", pady=(0, 5))
 
-            secondary_frame = ttk.Frame(layer_frame)
-            secondary_frame.pack(fill="x", anchor="w", pady=(0, 5))
+            configuration_dropdown = DropdownObject(
+                selection_frame,
+                "Configuration name",
+                self._get_configuration_names(),
+                default_value="No selection",
+                width=22,
+            )
+            configuration_dropdown.pack(side="left", anchor="n", padx=(0, 12))
+            self.layer_config_name_dropdowns[layer_number] = configuration_dropdown
+            configuration_dropdown.dropdown.bind(
+                "<<ComboboxSelected>>",
+                lambda event, number=layer_number: self._handle_configuration_name_selection(number, event),
+            )
 
-            for feature_key, feature_label, options, placement in self.layer_feature_definitions:
+            or_label = ttk.Label(selection_frame, text="OR", font=("TkDefaultFont", 15, "bold"))
+            or_label.pack(side="left", padx=(18, 32), anchor="n")
+
+            for feature_key, feature_label, options, _ in self.layer_feature_definitions:
                 dropdown = DropdownObject(
-                    primary_frame if placement == "primary" else secondary_frame,
+                    selection_frame,
                     feature_label,
                     options,
                     default_value="No selection",
-                    command=self._save_config_values,
+                    width=18,
+                    command=lambda event, number=layer_number: self._handle_manual_selection(number, event),
                 )
                 dropdown.pack(side="left", anchor="w", padx=(0, 15), pady=(0, 5))
                 self.layer_feature_dropdowns[layer_number][feature_key] = dropdown
+
+            warning_label = ttk.Label(
+                layer_frame,
+                textvariable=self.layer_warning_vars[layer_number],
+                foreground="red",
+                wraplength=1000,
+                justify="left",
+            )
+            warning_label.pack(anchor="w", pady=(8, 0))
 
         self._save_config_values()
 

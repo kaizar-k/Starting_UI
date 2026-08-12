@@ -23,7 +23,7 @@ class AddRemovePage(PageObject):
         self.form_frame.pack(fill="both", expand=True, padx=20, pady=20)
         self.form_frame.configure(borderwidth=1, relief="solid")
 
-        self.add_config_section = AddConfigSection(self.form_frame, self.category_options)
+        self.add_config_section = AddConfigSection(self.form_frame, self.category_options, self._refresh_sections)
         self.remove_config_section = RemoveConfigSection(self.form_frame, self.category_options)
         self.add_options_section = AddOptionsSection(self.form_frame, self.category_options, self._refresh_sections)
         self.remove_options_section = RemoveOptionsSection(self.form_frame, self.category_options, self._refresh_sections)
@@ -34,3 +34,9 @@ class AddRemovePage(PageObject):
         self.add_config_section.refresh()
         self.remove_config_section.refresh()
         self.remove_options_section.refresh()
+
+        app = self.winfo_toplevel()
+        if hasattr(app, "pages") and app.pages:
+            config_page = app.pages[0]
+            if hasattr(config_page, "refresh_from_config"):
+                config_page.refresh_from_config()
