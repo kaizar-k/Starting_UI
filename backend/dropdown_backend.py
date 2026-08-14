@@ -6,7 +6,7 @@ import pandas as pd
 
 
 class DropdownData:
-    _ignored_config_columns = {"configuration_name", "calibration_regimes", "threshold_force", "regimes"}
+    _ignored_config_columns = {"configuration_name", "calibration_regimes", "threshold_force", "threshold_forces", "regimes"}
 
     def __init__(self, options_csv_path: str | None = None, configurations_csv_path: str | None = None):
         # Find the project root so the CSV files can be read from the data folder.

@@ -1,23 +1,22 @@
-import pandas as pd
 import tkinter as tk
 from tkinter import ttk
 
-from backend.dropdown_backend import DropdownData
+from backend.calibration_curve_backend import CalibrationCurveBackend
 from gui.controls.dropdown_object import DropdownObject
 
 
 class RemoveCalibrationCurveSection(ttk.LabelFrame):
-    """Section for removing a saved calibration threshold force from an existing sensor configuration."""
+    """Section for removing a saved calibration curve from an existing sensor configuration."""
 
     def __init__(self, parent, refresh_callback=None):
         super().__init__(parent, text="Remove calibration curve", padding=12)
         self.refresh_callback = refresh_callback
-        self.dropdown_data = DropdownData()
+        self.backend = CalibrationCurveBackend()
         self.pack(fill="x", pady=(0, 12), anchor="w")
 
         ttk.Label(
             self,
-            text="Choose a configuration and remove its saved threshold-force calibration value.",
+            text="Choose a configuration and remove its saved threshold-force and regime calibration data.",
             wraplength=1000,
             justify="left",
         ).pack(anchor="w")
@@ -37,45 +36,31 @@ class RemoveCalibrationCurveSection(ttk.LabelFrame):
         self.message_label = ttk.Label(self, text="", foreground="red", wraplength=1000, justify="left")
         self.message_label.pack(anchor="w", pady=(8, 0))
 
-        save_button = ttk.Button(self, text="Remove threshold force", command=self._remove_threshold_force)
+        save_button = ttk.Button(self, text="Remove calibration curve", command=self._remove_calibration_curve)
         save_button.pack(anchor="e", pady=(8, 0))
 
     def _get_configuration_names(self):
-        try:
-            if not self.dropdown_data.configurations_csv_path.exists():
-                return ["No selection"]
-            configuration_df = pd.read_csv(self.dropdown_data.configurations_csv_path)
-        except Exception:
-            return ["No selection"]
+        return self.backend.get_configuration_names()
 
-        names = configuration_df["configuration_name"].fillna("").astype(str).str.strip().tolist()
-        unique_names = []
-        for name in names:
-            if name and name not in unique_names:
-                unique_names.append(name)
-        return ["No selection"] + unique_names
-
-    def _remove_threshold_force(self):
+    def _remove_calibration_curve(self):
         configuration_name = self.configuration_dropdown.get().strip()
         if not configuration_name or configuration_name == "No selection":
-            self.message_label.config(text="Please choose a configuration name before removing the threshold force.")
+            self.message_label.config(text="Please choose a configuration name before removing the calibration curve.")
             return
 
         try:
-            df = pd.read_csv(self.dropdown_data.configurations_csv_path)
-        except Exception:
-            self.message_label.config(text="Could not find the configuration data file.")
+            self.backend.remove_calibration_curve(configuration_name)
+        except ValueError as exc:
+            self.message_label.config(text=str(exc))
             return
 
-        matches = df["configuration_name"].astype(str).str.strip() == configuration_name
-        if not matches.any():
-            self.message_label.config(text="The selected configuration name does not exist.")
-            return
+        # Reset the visible selector after the row is cleared so the remove section always reflects
+        # the current saved data. Without this, the old selected configuration can remain in the UI even
+        # though the CSV has already been updated.
+        self.configuration_dropdown.dropdown.configure(values=self._get_configuration_names())
+        self.configuration_dropdown.set("No selection")
+        self.message_label.config(text=f"Calibration curve removed for '{configuration_name}'.")
 
-        df.loc[matches, "threshold_force"] = ""
-        df.to_csv(self.dropdown_data.configurations_csv_path, index=False)
-
-        self.message_label.config(text=f"Threshold force removed for '{configuration_name}'.")
         if self.refresh_callback is not None:
             self.refresh_callback()
 
