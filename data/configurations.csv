@@ -1,14 +1,27 @@
-configuration_name,AC/DC,Sensor Type,Substrate,Graphene,Coating,calibration_regimes
-example1,AC,loop,substrate 1,graphene 1,coating 1,regime 1
-example2,AC,loop,substrate 2,graphene 2,coating 2,regime 2
-example3,AC,loop,substrate 1,graphene 3,coating 3,regime 3
-example4,DC,loop,substrate 2,graphene 1,coating 2,regime 4
-example5,AC,loop,substrate 3,graphene 2,coating 3,regime 5
-example6,DC,loop,substrate 1,graphene 3,coating 1,regime 6
-example7,AC,loop,substrate 2,graphene 1,coating 3,regime 7
-example8,DC,loop,substrate 3,graphene 2,coating 2,regime 8
-example9,AC,loop,substrate 1,graphene 3,coating 2,regime 9
-example10,DC,loop,substrate 2,graphene 2,coating 1,regime 10
-in program example,AC,loop,substrate 1,graphene 2,coating 3,
-yioioo,AC,yoooooo,substrate 3,graphene 1,coating 2,
-rando,AC,loop,substrate 2,graphene 1,coating 1,
+configuration_name,AC/DC,Sensor Type,Substrate,Graphene,Coating,threshold_force,regimes
+example1,AC,1-Loop,substrate 1,graphene 1,coating 1,26.5,"[{""lower_bound_g"": 0, ""coefficients"": [1.8, -0.04, 0.0007]}, {""lower_bound_g"": 12, ""coefficients"": [2.6, -0.07, 0.0009]}]"
+example2,AC,1-Loop,substrate 2,graphene 2,coating 2,31.0,"[{""lower_bound_g"": 0, ""coefficients"": [1.5, -0.03, 0.0005]}, {""lower_bound_g"": 10, ""coefficients"": [2.1, -0.05, 0.0008]}, {""lower_bound_g"": 22, ""coefficients"": [2.9, -0.08, 0.0011]}]"
+example3,AC,1-Loop,substrate 1,graphene 3,coating 3,38.2,"[{""lower_bound_g"": 0, ""coefficients"": [1.9, -0.02, 0.0004]}, {""lower_bound_g"": 16, ""coefficients"": [3.2, -0.06, 0.001]}]"
+example4,DC,1-Loop,substrate 2,graphene 1,coating 2,42.7,"[{""lower_bound_g"": 0, ""coefficients"": [1.4, -0.018, 0.00035]}, {""lower_bound_g"": 13, ""coefficients"": [2.5, -0.05, 0.0008]}, {""lower_bound_g"": 27, ""coefficients"": [3.5, -0.07, 0.0012]}]"
+example6,DC,1-Loop,substrate 1,graphene 3,coating 1,29.4,"[{""lower_bound_g"": 0, ""coefficients"": [1.7, -0.04, 0.0006]}, {""lower_bound_g"": 14, ""coefficients"": [2.8, -0.06, 0.001]}]"
+example7,AC,1-Loop,substrate 2,graphene 1,coating 3,35.1,"[{""lower_bound_g"": 0, ""coefficients"": [1.6, -0.029, 0.0005]}, {""lower_bound_g"": 11, ""coefficients"": [2.4, -0.054, 0.0009]}, {""lower_bound_g"": 24, ""coefficients"": [3.1, -0.072, 0.0013]}]"
+example8,DC,1-Loop,substrate 3,graphene 2,coating 2,44.3,"[{""lower_bound_g"": 0, ""coefficients"": [1.3, -0.017, 0.0003]}, {""lower_bound_g"": 15, ""coefficients"": [2.7, -0.058, 0.001]}]"
+example9,AC,1-Loop,substrate 1,graphene 3,coating 2,27.8,"[{""lower_bound_g"": 0, ""coefficients"": [1.7, -0.032, 0.0006]}, {""lower_bound_g"": 9, ""coefficients"": [2.3, -0.051, 0.0008]}, {""lower_bound_g"": 19, ""coefficients"": [2.8, -0.069, 0.0012]}]"
+example10,DC,1-Loop,substrate 2,graphene 2,coating 1,33.6,"[{""lower_bound_g"": 0, ""coefficients"": [1.5, -0.026, 0.00045]}, {""lower_bound_g"": 13, ""coefficients"": [2.5, -0.057, 0.00095]}]"
+in program example,AC,1-Loop,substrate 1,graphene 2,coating 3,30.0,"[{""lower_bound_g"": 70.0, ""coefficients"": [0.0, 0.0, 0.0, 1.0, 2.0, 3.0]}]"
+gaf,AC,square,substrate 1,graphene 2,coating 3,,
+S6,DC,1-Loop,Panasonic,GR94-04,Kapton,,
+S14,DC,1-Loop,PET,GR94-04,C81,,
+S25,DC,1-Loop,PET,GR113,CAD,,
+S27,DC,1-Loop,PET,GR113B,CAD,,
+S27,AC,1-Loop,PET,GR113B,CAD,,
+S30,DC,1-Loop,C81,GR116,C81,,
+S30,AC,1-Loop,C81,GR116,C81,,
+S31,DC,1-Loop,C81,GR109,C81,,
+S33,AC,1-Loop,PET,GR116 P1,C81,,
+S35,DC,1-Loop,PET,GR116,CAD,,
+S36,DC,1-Loop,C20,GR116,C20,,
+S36,AC,1-Loop,C20,GR116,C20,,
+S38,AC,1-Loop,5202,GR113B,5202,,
+S39,AC,1-Loop,Nitrile Rubber,GR113B,C81,,
+S40,AC,1-Loop,PEEK,GR113B,CAD,,

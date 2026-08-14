@@ -1,6 +1,6 @@
 import pandas as pd
 
-from backend.dropdown_data import DropdownData
+from backend.dropdown_backend import DropdownData
 
 
 def test_get_configuration_values_by_name_returns_matching_row(tmp_path):

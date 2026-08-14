@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from backend.dropdown_data import DropdownData
+from backend.dropdown_backend import DropdownData
 from gui.controls.dropdown_object import DropdownObject
 from gui.pages.page_object import PageObject
 

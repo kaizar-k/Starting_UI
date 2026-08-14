@@ -1,11 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
 
-from backend.dropdown_data import DropdownData
+from backend.dropdown_backend import DropdownData
 from gui.pages.add_config_section import AddConfigSection
+from gui.pages.add_curve import AddCalibrationCurveSection
 from gui.pages.add_options_section import AddOptionsSection
 from gui.pages.page_object import PageObject
 from gui.pages.remove_config_section import RemoveConfigSection
+from gui.pages.remove_curve import RemoveCalibrationCurveSection
 from gui.pages.remove_options_section import RemoveOptionsSection
 
 
@@ -25,6 +27,8 @@ class AddRemovePage(PageObject):
 
         self.add_config_section = AddConfigSection(self.form_frame, self.category_options, self._refresh_sections)
         self.remove_config_section = RemoveConfigSection(self.form_frame, self.category_options)
+        self.add_calibration_curve_section = AddCalibrationCurveSection(self.form_frame, self._refresh_sections)
+        self.remove_calibration_curve_section = RemoveCalibrationCurveSection(self.form_frame, self._refresh_sections)
         self.add_options_section = AddOptionsSection(self.form_frame, self.category_options, self._refresh_sections)
         self.remove_options_section = RemoveOptionsSection(self.form_frame, self.category_options, self._refresh_sections)
 
@@ -33,6 +37,8 @@ class AddRemovePage(PageObject):
     def _refresh_sections(self):
         self.add_config_section.refresh()
         self.remove_config_section.refresh()
+        self.add_calibration_curve_section.refresh()
+        self.remove_calibration_curve_section.refresh()
         self.remove_options_section.refresh()
 
         app = self.winfo_toplevel()

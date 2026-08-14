@@ -1,6 +1,7 @@
 category,value
 AC/DC,AC
 AC/DC,DC
+Sensor Type,1-Loop
 Sensor Type,loop
 Sensor Type,rectangle
 Sensor Type,square
@@ -9,9 +10,28 @@ Sensor Type,yoooooo
 Substrate,substrate 1
 Substrate,substrate 2
 Substrate,substrate 3
+Substrate,substrate 4
+Substrate,Panasonic
+Substrate,PET
+Substrate,C81
+Substrate,C20
+Substrate,5202
+Substrate,Nitrile Rubber
+Substrate,PEEK
 Graphene,graphene 1
 Graphene,graphene 2
 Graphene,graphene 3
+Graphene,GR94-04
+Graphene,GR113
+Graphene,GR113B
+Graphene,GR116
+Graphene,GR116 P1
+Graphene,GR109
 Coating,coating 1
 Coating,coating 2
 Coating,coating 3
+Coating,Kapton
+Coating,C81
+Coating,CAD
+Coating,C20
+Coating,5202

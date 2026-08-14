@@ -6,6 +6,8 @@ import pandas as pd
 
 
 class DropdownData:
+    _ignored_config_columns = {"configuration_name", "calibration_regimes", "threshold_force", "regimes"}
+
     def __init__(self, options_csv_path: str | None = None, configurations_csv_path: str | None = None):
         # Find the project root so the CSV files can be read from the data folder.
         base_dir = Path(__file__).resolve().parents[1]
@@ -29,7 +31,7 @@ class DropdownData:
         headers = [str(column).strip() for column in df.columns]
         category_names = []
         for header in headers:
-            if header and header not in {"configuration_name", "calibration_regimes"}:
+            if header and header not in self._ignored_config_columns:
                 category_names.append(header)
 
         return category_names
@@ -74,7 +76,7 @@ class DropdownData:
         used_options_by_category: Dict[str, List[str]] = {}
         for column in df.columns:
             column_name = str(column).strip()
-            if not column_name or column_name in {"configuration_name", "calibration_regimes"}:
+            if not column_name or column_name in self._ignored_config_columns:
                 continue
 
             values = []
@@ -124,7 +126,7 @@ class DropdownData:
         candidate_columns = [
             column_name
             for column_name in df.columns
-            if column_name and column_name not in {"configuration_name", "calibration_regimes"}
+            if column_name and column_name not in self._ignored_config_columns
         ]
 
         for _, row in df.iterrows():

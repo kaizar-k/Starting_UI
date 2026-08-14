@@ -1,6 +1,6 @@
 import pandas as pd
 
-from backend.dropdown_data import DropdownData
+from backend.dropdown_backend import DropdownData
 
 
 def test_get_used_options_by_category_reads_configurations_csv(tmp_path):

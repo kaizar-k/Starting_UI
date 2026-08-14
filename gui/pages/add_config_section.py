@@ -3,7 +3,7 @@ from tkinter import ttk
 
 import pandas as pd
 
-from backend.dropdown_data import DropdownData
+from backend.dropdown_backend import DropdownData
 from gui.controls.dropdown_object import DropdownObject
 
 
