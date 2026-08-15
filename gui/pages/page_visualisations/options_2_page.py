@@ -1,4 +1,4 @@
-from gui.pages.pop_up_banner import PopUpObject
+from gui.pages.objects.pop_up_banner import PopUpObject
 
 
 class Options2Page(PopUpObject):

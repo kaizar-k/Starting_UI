@@ -2,13 +2,13 @@ import tkinter as tk
 from tkinter import ttk
 
 from backend.dropdown_backend import DropdownData
-from gui.pages.add_config_section import AddConfigSection
-from gui.pages.add_curve import AddCalibrationCurveSection
-from gui.pages.add_options_section import AddOptionsSection
-from gui.pages.page_object import PageObject
-from gui.pages.remove_config_section import RemoveConfigSection
-from gui.pages.remove_curve import RemoveCalibrationCurveSection
-from gui.pages.remove_options_section import RemoveOptionsSection
+from gui.pages.setup.add_config_section import AddConfigSection
+from gui.pages.setup.add_curve import AddCalibrationCurveSection
+from gui.pages.setup.add_options_section import AddOptionsSection
+from gui.pages.objects.page_object import PageObject
+from gui.pages.setup.remove_config_section import RemoveConfigSection
+from gui.pages.setup.remove_curve import RemoveCalibrationCurveSection
+from gui.pages.setup.remove_options_section import RemoveOptionsSection
 
 
 class AddRemovePage(PageObject):

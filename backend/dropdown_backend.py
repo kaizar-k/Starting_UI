@@ -6,7 +6,26 @@ import pandas as pd
 
 
 class DropdownData:
-    _ignored_config_columns = {"configuration_name", "calibration_regimes", "threshold_force", "threshold_forces", "regimes"}
+    sensor_identity_columns = ["AC/DC", "Sensor Type", "Substrate", "Graphene", "Coating"]
+    _ignored_config_columns = {
+        "configuration_name",
+        "calibration_regimes",
+        "threshold_force",
+        "threshold_forces",
+        "regimes",
+        "hysteresis_ratios",
+    }
+
+    def _get_sensor_identity_columns(self, df: pd.DataFrame) -> List[str]:
+        present_columns = [column_name for column_name in self.sensor_identity_columns if column_name in df.columns]
+        if present_columns:
+            return present_columns
+
+        return [
+            str(column_name).strip()
+            for column_name in df.columns
+            if column_name and str(column_name).strip() not in self._ignored_config_columns
+        ]
 
     def __init__(self, options_csv_path: str | None = None, configurations_csv_path: str | None = None):
         # Find the project root so the CSV files can be read from the data folder.
@@ -28,13 +47,11 @@ class DropdownData:
         except Exception:
             return ["AC/DC", "Sensor Type", "Substrate", "Graphene", "Coating"]
 
-        headers = [str(column).strip() for column in df.columns]
-        category_names = []
-        for header in headers:
-            if header and header not in self._ignored_config_columns:
-                category_names.append(header)
+        sensor_columns = self._get_sensor_identity_columns(df)
+        if sensor_columns:
+            return sensor_columns
 
-        return category_names
+        return ["AC/DC", "Sensor Type", "Substrate", "Graphene", "Coating"]
 
     def get_options_by_category(self) -> Dict[str, List[str]]:
         """Read the options from options.csv and group them by category."""
@@ -74,11 +91,7 @@ class DropdownData:
             return {}
 
         used_options_by_category: Dict[str, List[str]] = {}
-        for column in df.columns:
-            column_name = str(column).strip()
-            if not column_name or column_name in self._ignored_config_columns:
-                continue
-
+        for column_name in self._get_sensor_identity_columns(df):
             values = []
             for value in df[column_name].dropna():
                 option_value = str(value).strip()
@@ -123,11 +136,7 @@ class DropdownData:
         if df.empty:
             return None
 
-        candidate_columns = [
-            column_name
-            for column_name in df.columns
-            if column_name and column_name not in self._ignored_config_columns
-        ]
+        candidate_columns = self._get_sensor_identity_columns(df)
 
         for _, row in df.iterrows():
             matches = True

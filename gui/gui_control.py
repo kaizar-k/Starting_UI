@@ -10,13 +10,13 @@ class TKinterApp(tk.Tk):
 
         # Import the page classes inside the constructor so Tk fonts are available
         # once the main window has been created.
-        from gui.pages.page_object import PageObject
-        from gui.pages.config_page import ConfigPage
-        from gui.pages.two_d_visualisation_page import TwoDVisualisationPage
-        from gui.pages.three_d_visualisation_page import ThreeDVisualisationPage
-        from gui.pages.options_1_page import Options1Page
-        from gui.pages.options_2_page import Options2Page
-        from gui.pages.add_remove_page import AddRemovePage
+        from gui.pages.objects.page_object import PageObject
+        from gui.pages.setup.config_page import ConfigPage
+        from gui.pages.page_visualisations.two_d_visualisation_page import TwoDVisualisationPage
+        from gui.pages.page_visualisations.three_d_visualisation_page import ThreeDVisualisationPage
+        from gui.pages.page_visualisations.options_1_page import Options1Page
+        from gui.pages.page_visualisations.options_2_page import Options2Page
+        from gui.pages.setup.add_remove_page import AddRemovePage
 
         # Set the window title and make the app fill the full screen.
         self.title('DZP Sensor Visualisation Tool')
@@ -33,7 +33,7 @@ class TKinterApp(tk.Tk):
         # Add the main visualisation pages, the new configuration-management page, and their popup companions.
         self.pages.append(TwoDVisualisationPage(self, '2D Force Visualisation per Layer', 1, 2))
         self.pages.append(Options1Page(self, 'Options 1', 2, 1))
-        self.pages.append(ThreeDVisualisationPage(self, '3D Force Visualisation (All Layers)', 3, 4))
+        self.pages.append(ThreeDVisualisationPage(self, '3D Force Visualisation (All Layers)', 3, 5))
         self.pages.append(AddRemovePage(self, 'Add/remove configurations', 4, 5))
         self.pages.append(Options2Page(self, 'Options 2', 5, 3))
 

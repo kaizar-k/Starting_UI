@@ -9,7 +9,7 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
     """Section for adding or replacing a calibration curve on an existing sensor configuration."""
 
     def __init__(self, parent, refresh_callback=None):
-        super().__init__(parent, text="Add/Replace calibration curve", padding=12)
+        super().__init__(parent, text="Add/ Replace calibration curve", padding=12)
         self.refresh_callback = refresh_callback
         self.backend = CalibrationCurveBackend()
         self.regime_entries = []

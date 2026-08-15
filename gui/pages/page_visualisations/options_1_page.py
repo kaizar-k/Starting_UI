@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from gui.controls.checkbutton import Checkbutton
-from gui.pages.pop_up_banner import PopUpObject
+from gui.pages.objects.pop_up_banner import PopUpObject
 
 
 class Options1Page(PopUpObject):

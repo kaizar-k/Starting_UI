@@ -1,4 +1,4 @@
-from gui.pages.page_object import PageObject
+from gui.pages.objects.page_object import PageObject
 
 
 class ThreeDVisualisationPage(PageObject):

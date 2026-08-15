@@ -1,4 +1,4 @@
-configuration_name,AC/DC,Sensor Type,Substrate,Graphene,Coating,threshold_forces,regimes,hysteresis_ratios
+configuration_name,AC/DC,Sensor Type,Substrate,Graphene,Coating,threshold_forces,regimes,calibration_regimes
 example1,AC,1-Loop,substrate 1,graphene 1,coating 1,"[80.0, 200.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [1.8, -0.04, 0.0007]}, {""lower_bound_g"": 25.0, ""coefficients"": [2.6, -0.07, 0.0009]}, {""lower_bound_g"": 40.0, ""coefficients"": [3.5, -0.09, 0.0012]}]",
 example2,AC,1-Loop,substrate 2,graphene 2,coating 2,"[10.0, 200.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [1.0, 2.0]}]",
 example3,AC,1-Loop,substrate 1,graphene 3,coating 3,"[38.2, 200.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [1.9, -0.02, 0.0004]}, {""lower_bound_g"": 18.0, ""coefficients"": [3.2, -0.06, 0.001]}, {""lower_bound_g"": 32.0, ""coefficients"": [4.1, -0.1, 0.0015]}]",
@@ -23,3 +23,4 @@ S36,AC,1-Loop,C20,GR116,C20,"[10.0, 100.0]","[{""lower_bound_g"": 0.0, ""coeffic
 S38,AC,1-Loop,5202,GR113B,5202,"[25.0, 200.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [-8.949e-05, 0.002163, 0.9919]}, {""lower_bound_g"": 25.0, ""coefficients"": [2.17e-07, -2.608e-05, 1.001]}]",
 S39,AC,1-Loop,Nitrile Rubber,GR113B,C81,"[25.0, 200.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [8.186e-07, 0.0002291, 0.9933]}, {""lower_bound_g"": 25.0, ""coefficients"": [1.541e-07, 3.993e-06, 0.9998]}]",
 S40,AC,1-Loop,PEEK,GR113B,CAD,"[25.0, 200.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [1.611e-05, -0.0002015, 0.9989]}, {""lower_bound_g"": 25.0, ""coefficients"": [-3.849e-07, 0.0001252, 0.9952]}]",
+example11,AC,1-Loop,substrate 4,graphene 3,coating 3,"[0.0, 200.0]","[{""lower_bound_g"": 10.0, ""coefficients"": [1.0, 2.0, 3.0]}, {""lower_bound_g"": 50.0, ""coefficients"": [4.0, 5.0, 6.0]}]",

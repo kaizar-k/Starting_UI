@@ -3,7 +3,7 @@ from tkinter import ttk
 
 from backend.dropdown_backend import DropdownData
 from gui.controls.dropdown_object import DropdownObject
-from gui.pages.page_object import PageObject
+from gui.pages.objects.page_object import PageObject
 
 
 def build_layer_feature_definitions(category_names, category_options):

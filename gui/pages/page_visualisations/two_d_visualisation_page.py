@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from gui.pages.page_object import PageObject
+from gui.pages.objects.page_object import PageObject
 
 
 class TwoDVisualisationPage(PageObject):
