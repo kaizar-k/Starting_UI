@@ -124,6 +124,9 @@ class CalibrationCurveBackend:
         regime_count = max(1, min(5, len(parsed_regimes)))
         return {"threshold_forces": threshold_forces, "regimes": parsed_regimes[:5], "regime_count": regime_count}
 
+    # @staticmethod means this method doesn't receive self and doesn't touch any instance data,
+    # so it behaves like a plain function that just happens to live inside the class for organisation.
+    # It's still called as self.validate_float(...) or CalibrationCurveBackend.validate_float(...).
     @staticmethod
     def validate_float(value, field_name: str) -> float:
         if value is None:

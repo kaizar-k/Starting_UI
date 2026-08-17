@@ -4,10 +4,12 @@ from tkinter import ttk
 from backend.dropdown_backend import DropdownData
 from gui.pages.setup.add_config_section import AddConfigSection
 from gui.pages.setup.add_curve import AddCalibrationCurveSection
+from gui.pages.setup.add_design import AddSensorDesignSection
 from gui.pages.setup.add_options_section import AddOptionsSection
 from gui.pages.objects.page_object import PageObject
 from gui.pages.setup.remove_config_section import RemoveConfigSection
 from gui.pages.setup.remove_curve import RemoveCalibrationCurveSection
+from gui.pages.setup.remove_design import RemoveSensorDesignSection
 from gui.pages.setup.remove_options_section import RemoveOptionsSection
 
 
@@ -29,6 +31,8 @@ class AddRemovePage(PageObject):
         self.remove_config_section = RemoveConfigSection(self.form_frame, self.category_options)
         self.add_calibration_curve_section = AddCalibrationCurveSection(self.form_frame, self._refresh_sections)
         self.remove_calibration_curve_section = RemoveCalibrationCurveSection(self.form_frame, self._refresh_sections)
+        self.add_sensor_design_section = AddSensorDesignSection(self.form_frame, self._refresh_sections)
+        self.remove_sensor_design_section = RemoveSensorDesignSection(self.form_frame, self._refresh_sections)
         self.add_options_section = AddOptionsSection(self.form_frame, self.category_options, self._refresh_sections)
         self.remove_options_section = RemoveOptionsSection(self.form_frame, self.category_options, self._refresh_sections)
 
@@ -39,6 +43,8 @@ class AddRemovePage(PageObject):
         self.remove_config_section.refresh()
         self.add_calibration_curve_section.refresh()
         self.remove_calibration_curve_section.refresh()
+        self.add_sensor_design_section.refresh()
+        self.remove_sensor_design_section.refresh()
         self.remove_options_section.refresh()
 
         app = self.winfo_toplevel()

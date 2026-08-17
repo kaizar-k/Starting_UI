@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from backend.dropdown_backend import DropdownData
+from backend.sensor_design_backend import SensorDesignBackend
 from gui.controls.dropdown_object import DropdownObject
 from gui.pages.objects.page_object import PageObject
 
@@ -32,9 +33,12 @@ class ConfigPage(PageObject):
             "layer_description": [],
             # Store the layers selected in the options popup so other pages can read them.
             "options_1_selected_layers": [],
+            # Sensor type selected for each layer, in layer order.
+            "layer_sensor_types": [],
         }
 
         self.dropdown_data = DropdownData()
+        self.sensor_design_backend = SensorDesignBackend()
         self.category_names = self.dropdown_data.get_category_names()
         self.category_options = self.dropdown_data.get_options_by_category()
 
@@ -45,7 +49,9 @@ class ConfigPage(PageObject):
         # Keep track of the dynamically created dropdowns for each layer and feature.
         self.layer_feature_dropdowns = {}
         self.layer_config_name_dropdowns = {}
+        self.layer_sensor_type_dropdowns = {}
         self.layer_warning_vars = {}
+        self.layer_status_labels = {}
 
         # Other pages can register here to be notified when the layer configuration changes.
         self.layer_change_observers = []
@@ -118,27 +124,21 @@ class ConfigPage(PageObject):
     def _handle_configuration_name_selection(self, layer_number, event=None):
         """When a preset is chosen, fill the layer's manual dropdowns from that configuration."""
         selected_name = self.layer_config_name_dropdowns[layer_number].get()
-        warning_var = self.layer_warning_vars.get(layer_number)
-        if warning_var is None:
-            return
 
         if not selected_name or selected_name == "No selection":
-            warning_var.set("")
+            self._refresh_layer_status(layer_number)
             return
 
         values = self.dropdown_data.get_configuration_values_by_name(selected_name)
-        if not values:
-            warning_var.set("Configuration selected for this layer: No selection")
-            return
+        if values:
+            for feature_key, feature_label, _, _ in self.layer_feature_definitions:
+                dropdown = self.layer_feature_dropdowns.get(layer_number, {}).get(feature_key)
+                if dropdown is None:
+                    continue
+                option_value = values.get(feature_label, "No selection")
+                dropdown.set(option_value if option_value else "No selection")
 
-        warning_var.set(f"Configuration selected for this layer: {selected_name}")
-        for feature_key, feature_label, _, _ in self.layer_feature_definitions:
-            dropdown = self.layer_feature_dropdowns.get(layer_number, {}).get(feature_key)
-            if dropdown is None:
-                continue
-            option_value = values.get(feature_label, "No selection")
-            dropdown.set(option_value if option_value else "No selection")
-
+        self._refresh_layer_status(layer_number)
         self._save_config_values()
 
     def _handle_manual_selection(self, layer_number, event=None):
@@ -152,23 +152,42 @@ class ConfigPage(PageObject):
             if value and value != "No selection":
                 selected_values[feature_label] = value
 
+        if not selected_values:
+            self.layer_config_name_dropdowns[layer_number].set("No selection")
+            self._refresh_layer_status(layer_number)
+            return
+
+        matched_name = self.dropdown_data.find_configuration_name_for_values(selected_values)
+        self.layer_config_name_dropdowns[layer_number].set(matched_name if matched_name else "No selection")
+        self._refresh_layer_status(layer_number)
+        self._save_config_values()
+
+    def _handle_sensor_type_selection(self, layer_number, event=None):
+        """Store the sensor design chosen for this layer."""
+        sensor_type = self.layer_sensor_type_dropdowns[layer_number].get()
+        self.sensor_design_backend.set_layer_sensor_type(layer_number, sensor_type)
+        self._refresh_layer_status(layer_number)
+        self._save_config_values()
+
+    def _refresh_layer_status(self, layer_number):
+        """Show the configuration name and sensor design for this layer, or a warning if either is missing."""
         warning_var = self.layer_warning_vars.get(layer_number)
         if warning_var is None:
             return
 
-        if not selected_values:
-            warning_var.set("")
-            return
+        config_dropdown = self.layer_config_name_dropdowns.get(layer_number)
+        sensor_dropdown = self.layer_sensor_type_dropdowns.get(layer_number)
+        configuration_name = config_dropdown.get() if config_dropdown else "No selection"
+        sensor_type = sensor_dropdown.get() if sensor_dropdown else "No selection"
 
-        matched_name = self.dropdown_data.find_configuration_name_for_values(selected_values)
-        if matched_name is None:
-            warning_var.set("Configuration selected for this layer: No configuration. No matching configuration found")
-            self.layer_config_name_dropdowns[layer_number].set("No selection")
-            return
+        if configuration_name == "No selection" or sensor_type == "No selection":
+            warning_var.set("Note: Both sensor design and configuration need to be selected.")
+        else:
+            warning_var.set(f"Configuration: {configuration_name}, Sensor design: {sensor_type}")
 
-        warning_var.set(f"Configuration selected for this layer: {matched_name}")
-        self.layer_config_name_dropdowns[layer_number].set(matched_name)
-        self._save_config_values()
+        status_label = self.layer_status_labels.get(layer_number)
+        if status_label is not None:
+            status_label.configure(foreground="black" if configuration_name != "No selection" and sensor_type != "No selection" else "red")
 
     def _refresh_layer_inputs(self, event=None):
         """Clear and recreate the per-layer feature dropdowns based on the selected layer count."""
@@ -176,6 +195,7 @@ class ConfigPage(PageObject):
             widget.destroy()
 
         self.layer_feature_dropdowns.clear()
+        self.layer_status_labels.clear()
 
         try:
             layer_count = int(self.layers_dropdown.get())
@@ -227,6 +247,20 @@ class ConfigPage(PageObject):
                 dropdown.pack(side="left", anchor="w", padx=(0, 15), pady=(0, 5))
                 self.layer_feature_dropdowns[layer_number][feature_key] = dropdown
 
+            sensor_type_dropdown = DropdownObject(
+                layer_frame,
+                "Sensor design",
+                self.sensor_design_backend.get_sensor_type_options(),
+                default_value="No selection",
+                width=18,
+                command=lambda event, number=layer_number: self._handle_sensor_type_selection(number, event),
+            )
+            sensor_type_dropdown.pack(anchor="w", pady=(5, 5))
+            self.layer_sensor_type_dropdowns[layer_number] = sensor_type_dropdown
+            existing_sensor_type = self.sensor_design_backend.get_layer_sensor_type(layer_number)
+            if existing_sensor_type:
+                sensor_type_dropdown.set(existing_sensor_type)
+
             warning_label = ttk.Label(
                 layer_frame,
                 textvariable=self.layer_warning_vars[layer_number],
@@ -235,6 +269,8 @@ class ConfigPage(PageObject):
                 justify="left",
             )
             warning_label.pack(anchor="w", pady=(8, 0))
+            self.layer_status_labels[layer_number] = warning_label
+            self._refresh_layer_status(layer_number)
 
         self._save_config_values()
 
@@ -270,12 +306,20 @@ class ConfigPage(PageObject):
                 if feature_key in feature_values:
                     description_parts.append(f"{feature_label.lower()}={feature_values[feature_key]}")
 
+            config_dropdown = self.layer_config_name_dropdowns.get(layer_number)
+            configuration_name = config_dropdown.get() if config_dropdown else "No selection"
+            sensor_dropdown = self.layer_sensor_type_dropdowns.get(layer_number)
+            sensor_type = sensor_dropdown.get() if sensor_dropdown else "No selection"
+            description_parts.append(f"configuration name={configuration_name}")
+            description_parts.append(f"sensor design={sensor_type}")
+
             layer_description.append(
                 f"Layer {layer_number}: " + ", ".join(description_parts)
             )
 
         self.config_values["layer_features"] = layer_features
         self.config_values["layer_description"] = layer_description
+        self.config_values["layer_sensor_types"] = self.sensor_design_backend.get_ordered_sensor_types(layer_count)
 
         if layer_description:
             self.summary_var.set("\n".join(layer_description))
