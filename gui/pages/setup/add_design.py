@@ -8,6 +8,9 @@ from gui.controls.dropdown_object import DropdownObject
 class AddSensorDesignSection(ttk.LabelFrame):
     """Section for adding a sensor design with dimensions and circular sensing points."""
 
+    DEFAULT_WIDTH = "22"
+    DEFAULT_HEIGHT = "38"
+
     def __init__(self, parent, refresh_callback=None):
         super().__init__(parent, text="Add sensor design", padding=12)
         self.refresh_callback = refresh_callback
@@ -31,11 +34,11 @@ class AddSensorDesignSection(ttk.LabelFrame):
         self.sensor_design_name_entry.pack(side="left", anchor="n", padx=(0, 12))
 
         ttk.Label(controls_frame, text="Width (mm):").pack(side="left", padx=(0, 5), anchor="n")
-        self.width_var = tk.StringVar(value="22")
+        self.width_var = tk.StringVar(value=self.DEFAULT_WIDTH)
         ttk.Entry(controls_frame, textvariable=self.width_var, width=10).pack(side="left", anchor="n", padx=(0, 12))
 
         ttk.Label(controls_frame, text="Height (mm):").pack(side="left", padx=(0, 5), anchor="n")
-        self.height_var = tk.StringVar(value="38")
+        self.height_var = tk.StringVar(value=self.DEFAULT_HEIGHT)
         ttk.Entry(controls_frame, textvariable=self.height_var, width=10).pack(side="left", anchor="n")
 
         self.coordinate_count_frame = ttk.Frame(self)
@@ -90,11 +93,29 @@ class AddSensorDesignSection(ttk.LabelFrame):
             y_var = tk.StringVar(value="0")
             ttk.Entry(coordinate_frame, textvariable=y_var, width=10).pack(side="left", anchor="n", padx=(0, 12))
 
-            ttk.Label(coordinate_frame, text="Radius (mm):").pack(side="left", anchor="n", padx=(0, 5))
-            radius_var = tk.StringVar(value="0")
-            ttk.Entry(coordinate_frame, textvariable=radius_var, width=10).pack(side="left", anchor="n")
+            ttk.Label(coordinate_frame, text="Outer radius (mm):").pack(side="left", anchor="n", padx=(0, 5))
+            radius_outer_var = tk.StringVar(value="")
+            ttk.Entry(coordinate_frame, textvariable=radius_outer_var, width=10).pack(side="left", anchor="n", padx=(0, 12))
 
-            self.sensing_point_entries.append({"x": x_var, "y": y_var, "radius": radius_var})
+            ttk.Label(coordinate_frame, text="Inner radius (mm):").pack(side="left", anchor="n", padx=(0, 5))
+            radius_inner_var = tk.StringVar(value="")
+            ttk.Entry(coordinate_frame, textvariable=radius_inner_var, width=10).pack(side="left", anchor="n", padx=(0, 12))
+
+            ttk.Label(coordinate_frame, text="Sensor area (mm²):").pack(side="left", anchor="n", padx=(0, 5))
+            area_var = tk.StringVar(value="")
+            ttk.Entry(coordinate_frame, textvariable=area_var, width=10).pack(side="left", anchor="n")
+
+            self.sensing_point_entries.append({
+                "x": x_var,
+                "y": y_var,
+                "radius_outer": radius_outer_var,
+                "radius_inner": radius_inner_var,
+                "area": area_var,
+            })
+
+    def _reset_dimension_fields(self):
+        self.width_var.set(self.DEFAULT_WIDTH)
+        self.height_var.set(self.DEFAULT_HEIGHT)
 
     def _add_sensor_design(self):
         sensor_design_name = self.sensor_design_name_var.get().strip()
@@ -104,12 +125,7 @@ class AddSensorDesignSection(ttk.LabelFrame):
 
         try:
             dimensions = self.backend.build_dimensions_payload(self.width_var.get(), self.height_var.get())
-            sensing_points = self.backend.build_sensing_point_payload(self.sensing_point_entries, dimensions)
-        except ValueError as exc:
-            self.message_label.config(text=str(exc))
-            return
-
-        try:
+            sensing_points = self.backend.build_sensing_point_payload(self.sensing_point_entries)
             self.backend.add_sensor_design(sensor_design_name, dimensions, sensing_points)
         except ValueError as exc:
             self.message_label.config(text=str(exc))
@@ -117,8 +133,7 @@ class AddSensorDesignSection(ttk.LabelFrame):
 
         self.message_label.config(text=f"Sensor design '{sensor_design_name}' added.")
         self.sensor_design_name_var.set("")
-        self.width_var.set("")
-        self.height_var.set("")
+        self._reset_dimension_fields()
         self.coordinate_count_dropdown.set("1")
         self._refresh_coordinate_rows()
 
@@ -128,8 +143,7 @@ class AddSensorDesignSection(ttk.LabelFrame):
 
     def refresh(self):
         self.sensor_design_name_var.set("")
-        self.width_var.set("")
-        self.height_var.set("")
+        self._reset_dimension_fields()
         self.coordinate_count_dropdown.set("1")
         self._refresh_coordinate_rows()
         self.message_label.config(text="")

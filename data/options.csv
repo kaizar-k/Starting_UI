@@ -1,8 +1,7 @@
 category,value
 AC/DC,AC
 AC/DC,DC
-Sensor Type,1-Loop
-Sensor Type,loop
+Sensor Type,Loop
 Sensor Type,rectangle
 Sensor Type,square
 Sensor Type,hi

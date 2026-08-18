@@ -69,7 +69,12 @@ class SensorDesignBackend:
                 df[column_name] = ""
         return df[["Sensor Design", "Dimensions", "Sensing Points"]]
 
-    def add_sensor_design(self, sensor_design_name: str, dimensions: list, sensing_points: list) -> None:
+    def add_sensor_design(
+        self,
+        sensor_design_name: str,
+        dimensions: list,
+        sensing_points: list,
+    ) -> None:
         """Add a sensor design after its dimensions and sensing-point geometry are validated."""
         sensor_design_name = sensor_design_name.strip()
         if not sensor_design_name:
@@ -110,6 +115,29 @@ class SensorDesignBackend:
             raise ValueError(f"{field_name} must be a finite number.")
         return numeric_value
 
+    @staticmethod
+    def parse_optional_float(value, field_name: str) -> float:
+        """Treat blank strings as zero so optional geometry fields are easy to leave empty."""
+        if value is None:
+            return 0.0
+
+        if hasattr(value, "get"):
+            value = value.get()
+
+        stripped = str(value).strip()
+        if stripped == "":
+            return 0.0
+        return SensorDesignBackend.validate_float(stripped, field_name)
+
+    @staticmethod
+    def get_field_value(entry, field_name: str):
+        """Support both Tkinter StringVar objects and plain numeric/string values."""
+        if entry is None:
+            return ""
+        if hasattr(entry, "get"):
+            return entry.get()
+        return entry
+
     def build_dimensions_payload(self, width, height) -> list:
         """Validate and return the design dimensions in [width, height] order."""
         width_value = self.validate_float(width, "Width")
@@ -118,21 +146,37 @@ class SensorDesignBackend:
             raise ValueError("Width and height must be greater than zero.")
         return [width_value, height_value]
 
-    def build_sensing_point_payload(self, sensing_point_entries, dimensions: list) -> list:
-        """Collect sensing-point fields from the form and validate their geometry."""
+    def build_sensing_point_payload(self, sensing_point_entries) -> list:
+        """Collect raw sensing-point fields from the form for later validation."""
         sensing_points = []
         for point_index, point_entry in enumerate(sensing_point_entries, start=1):
-            sensing_points.append(
-                {
-                    "x": self.validate_float(point_entry["x"].get(), f"X-coordinate for sensing point {point_index}"),
-                    "y": self.validate_float(point_entry["y"].get(), f"Y-coordinate for sensing point {point_index}"),
-                    "radius": self.validate_float(point_entry["radius"].get(), f"Radius for sensing point {point_index}"),
-                }
-            )
-        return self.validate_sensing_points(sensing_points, dimensions)
+            point_data = {
+                "x": self.validate_float(
+                    self.get_field_value(point_entry["x"], f"X-coordinate for sensing point {point_index}"),
+                    f"X-coordinate for sensing point {point_index}",
+                ),
+                "y": self.validate_float(
+                    self.get_field_value(point_entry["y"], f"Y-coordinate for sensing point {point_index}"),
+                    f"Y-coordinate for sensing point {point_index}",
+                ),
+                "radius_outer": self.parse_optional_float(
+                    self.get_field_value(point_entry["radius_outer"], f"Outer radius for sensing point {point_index}"),
+                    f"Outer radius for sensing point {point_index}",
+                ),
+                "radius_inner": self.parse_optional_float(
+                    self.get_field_value(point_entry["radius_inner"], f"Inner radius for sensing point {point_index}"),
+                    f"Inner radius for sensing point {point_index}",
+                ),
+                "area": self.parse_optional_float(
+                    self.get_field_value(point_entry["area"], f"Sensor area for sensing point {point_index}"),
+                    f"Sensor area for sensing point {point_index}",
+                ),
+            }
+            sensing_points.append(point_data)
+        return sensing_points
 
     def validate_sensing_points(self, sensing_points: list, dimensions: list) -> list:
-        """Ensure every circular sensing area fits within the rectangular design."""
+        """Ensure every sensing area fits inside the rectangular design."""
         width, height = self.build_dimensions_payload(dimensions[0], dimensions[1])
         if not sensing_points:
             raise ValueError("At least one sensing point is required.")
@@ -141,16 +185,50 @@ class SensorDesignBackend:
         for point_index, sensing_point in enumerate(sensing_points, start=1):
             x_value = self.validate_float(sensing_point["x"], f"X-coordinate for sensing point {point_index}")
             y_value = self.validate_float(sensing_point["y"], f"Y-coordinate for sensing point {point_index}")
-            radius = self.validate_float(sensing_point["radius"], f"Radius for sensing point {point_index}")
+            radius_outer = self.parse_optional_float(
+                sensing_point.get("radius_outer", 0.0), f"Outer radius for sensing point {point_index}"
+            )
+            radius_inner = self.parse_optional_float(
+                sensing_point.get("radius_inner", 0.0), f"Inner radius for sensing point {point_index}"
+            )
+            area_value = self.parse_optional_float(
+                sensing_point.get("area", 0.0), f"Sensor area for sensing point {point_index}"
+            )
 
-            if radius <= 0:
-                raise ValueError(f"Radius for sensing point {point_index} must be greater than zero.")
-            if x_value - radius < 0 or x_value + radius > width:
-                raise ValueError(f"Sensing point {point_index} extends beyond the design width.")
-            if y_value - radius < 0 or y_value + radius > height:
-                raise ValueError(f"Sensing point {point_index} extends beyond the design height.")
+            has_ring_geometry = radius_outer > 0 or radius_inner > 0
+            has_area_geometry = area_value > 0
 
-            validated_points.append({"x": x_value, "y": y_value, "radius": radius})
+            if has_ring_geometry and has_area_geometry:
+                raise ValueError("sensor area not needed if inner and outer radii provided")
+
+            if not has_ring_geometry and not has_area_geometry:
+                raise ValueError(
+                    f"Provide a positive outer radius or a positive sensor area for sensing point {point_index}."
+                )
+
+            if has_ring_geometry:
+                if radius_outer <= 0:
+                    raise ValueError(f"Outer radius for sensing point {point_index} must be greater than zero.")
+                if radius_inner < 0:
+                    raise ValueError(f"Inner radius for sensing point {point_index} cannot be negative.")
+                if radius_inner >= radius_outer:
+                    raise ValueError(f"Inner radius for sensing point {point_index} must be smaller than the outer radius.")
+                if x_value - radius_outer < 0 or x_value + radius_outer > width:
+                    raise ValueError(f"Sensing point {point_index} extends beyond the design width.")
+                if y_value - radius_outer < 0 or y_value + radius_outer > height:
+                    raise ValueError(f"Sensing point {point_index} extends beyond the design height.")
+                area_value = math.pi * (radius_outer ** 2 - radius_inner ** 2)
+
+            if has_area_geometry and area_value <= 0:
+                raise ValueError(f"Sensor area for sensing point {point_index} must be greater than zero.")
+
+            validated_points.append({
+                "x": x_value,
+                "y": y_value,
+                "radius_outer": radius_outer,
+                "radius_inner": radius_inner,
+                "area": area_value,
+            })
 
         return validated_points
 
