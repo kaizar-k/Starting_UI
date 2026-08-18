@@ -65,18 +65,7 @@ class RemoveConfigSection(ttk.LabelFrame):
         return list(self.category_options.get(category_name, []))
 
     def _get_configuration_names(self):
-        try:
-            df = pd.read_csv(self.dropdown_data.configurations_csv_path)
-        except Exception:
-            return ["No selection"]
-
-        names = df["configuration_name"].fillna("").astype(str).str.strip().tolist()
-        unique_names = []
-        for name in names:
-            if name and name not in unique_names:
-                unique_names.append(name)
-
-        return ["No selection"] + unique_names
+        return self.dropdown_data.get_configuration_names()
 
     def _handle_configuration_name_selection(self, event=None):
         selected_name = self.dropdown_widgets["configuration_name"].get()

@@ -1,10 +1,4 @@
 Sensor Design,Dimensions,Sensing Points
-1-Loop,"[22.0, 38.0]","[{""x"": 11.0, ""y"": 27.0, ""radius_outer"": 10.0, ""radius_inner"": 5.0}]"
-4-Loop-Square,"[22.0, 38.0]","[{""x"": 5.5, ""y"": 32.5, ""radius_outer"": 3.5, ""radius_inner"": 1.75}, {""x"": 5.5, ""y"": 21.5, ""radius_outer"": 3.5, ""radius_inner"": 1.75}, {""x"": 16.5, ""y"": 21.5, ""radius_outer"": 3.5, ""radius_inner"": 1.75}, {""x"": 16.5, ""y"": 32.5, ""radius_outer"": 3.5, ""radius_inner"": 1.75}]"
-baba,"[22.0, 38.0]","[{""x"": 5.0, ""y"": 6.0, ""radius_outer"": 3.0, ""radius_inner"": 1.5, ""area"": 5.0}]"
-gago,"[22.0, 38.0]","[{""x"": 5.0, ""y"": 5.0, ""radius_outer"": 3.0, ""radius_inner"": 0.0, ""area"": 0.0}]"
-gigi,"[22.0, 38.0]","[{""x"": 5.0, ""y"": 5.0, ""radius_outer"": 0.0, ""radius_inner"": 0.0, ""area"": 5.0}]"
-hi,"[22.0, 38.0]","[{""x"": 9.0, ""y"": 8.0, ""radius_outer"": 0.0, ""radius_inner"": 0.0, ""area"": 3.0}, {""x"": 5.0, ""y"": 5.0, ""radius_outer"": 0.0, ""radius_inner"": 0.0, ""area"": 2.0}]"
-hhj,"[22.0, 38.0]","[{""x"": 5.0, ""y"": 5.0, ""radius_outer"": 2.0, ""radius_inner"": 1.0, ""area"": 9.42477796076938}]"
-jafksa,"[22.0, 38.0]","[{""x"": 5.0, ""y"": 5.0, ""radius_outer"": 0.0, ""radius_inner"": 0.0, ""area"": 3.0}, {""x"": 5.0, ""y"": 5.0, ""radius_outer"": 2.0, ""radius_inner"": 1.0, ""area"": 9.42477796076938}, {""x"": 4.0, ""y"": 3.0, ""radius_outer"": 1.0, ""radius_inner"": 0.5, ""area"": 2.356194490192345}]"
-jkljjkl,"[22.0, 38.0]","[{""x"": 5.0, ""y"": 5.0, ""radius_outer"": 0.0, ""radius_inner"": 0.0, ""area"": 8.0}]"
+1-Loop-Top,"[22.0, 38.0]","[{""x"": 11.0, ""y"": 27.0, ""radius_outer"": 10.0, ""radius_inner"": 5.0, ""area"": 235.61944901923448}]"
+4-Loop-Top,"[22.0, 38.0]","[{""x"": 5.5, ""y"": 32.5, ""radius_outer"": 3.5, ""radius_inner"": 1.75, ""area"": 28.863382504856226}, {""x"": 5.5, ""y"": 21.5, ""radius_outer"": 3.5, ""radius_inner"": 1.75, ""area"": 28.863382504856226}, {""x"": 16.5, ""y"": 21.5, ""radius_outer"": 3.5, ""radius_inner"": 1.75, ""area"": 28.863382504856226}, {""x"": 16.5, ""y"": 32.5, ""radius_outer"": 3.5, ""radius_inner"": 1.75, ""area"": 28.863382504856226}]"
+1-Loop-2-Corner-Top,"[22.0, 38.0]","[{""x"": 4.1, ""y"": 34.775, ""radius_outer"": 0.0, ""radius_inner"": 0.0, ""area"": 22.875}, {""x"": 11.0, ""y"": 27.0, ""radius_outer"": 5.5, ""radius_inner"": 2.0, ""area"": 82.46680715673207}, {""x"": 17.9, ""y"": 34.775, ""radius_outer"": 0.0, ""radius_inner"": 0.0, ""area"": 22.875}]"

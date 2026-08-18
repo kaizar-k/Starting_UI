@@ -66,3 +66,18 @@ def test_add_sensor_design_accepts_area_computed_by_form(tmp_path):
     backend.add_sensor_design("ring design", [50, 50], points)
 
     assert backend.get_sensor_type_options() == ["ring design"]
+
+
+def test_sensor_design_options_are_naturally_sorted(tmp_path):
+    design_data_path = tmp_path / "design_data.csv"
+    design_data_path.write_text(
+        "Sensor Design,Dimensions,Sensing Points\n"
+        "10 Loops,\"[50, 50]\",\"[]\"\n"
+        "2 Loops,\"[50, 50]\",\"[]\"\n"
+        "1 Loop,\"[50, 50]\",\"[]\"\n",
+        encoding="utf-8",
+    )
+
+    backend = SensorDesignBackend(str(design_data_path))
+
+    assert backend.get_sensor_type_options() == ["1 Loop", "2 Loops", "10 Loops"]

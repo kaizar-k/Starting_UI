@@ -20,7 +20,9 @@ class AddSensorDesignSection(ttk.LabelFrame):
 
         ttk.Label(
             self,
-            text="Enter the sensor dimensions and the centre coordinates and radius of each sensing point in mm. \nSensing point numbering convention is anticlockwise and starting from the top left.",
+              text="Enter the sensor dimensions and the centre coordinates and radius of each sensing point in mm. "
+                  "\nSensing point numbering convention is anticlockwise and starting from the top left."
+                  "\nSensing area coordinates are relative to origin at bottom left corner, with coordinates corresponding to centroid of the sensor",
             wraplength=1000,
             justify="left",
         ).pack(anchor="w")

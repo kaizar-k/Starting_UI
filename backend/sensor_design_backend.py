@@ -9,6 +9,7 @@ import math
 from pathlib import Path
 
 import pandas as pd
+from natsort import natsorted, ns
 
 
 class SensorDesignBackend:
@@ -37,14 +38,14 @@ class SensorDesignBackend:
         if "Sensor Design" not in df.columns:
             return []
 
-        # Preserve CSV row order and drop duplicates so the dropdown list stays clean.
+        # Drop duplicates, then naturally sort names for user-facing dropdowns.
         options = []
         for value in df["Sensor Design"].dropna():
             option_value = str(value).strip()
             if option_value and option_value not in options:
                 options.append(option_value)
 
-        return options
+        return natsorted(options, alg=ns.IGNORECASE)
 
     def set_layer_sensor_type(self, layer_number: int, sensor_type: str):
         self.layer_sensor_types[layer_number] = sensor_type

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, List
 
 import pandas as pd
+from natsort import natsorted, ns
 
 
 class DropdownData:
@@ -53,6 +54,27 @@ class DropdownData:
 
         return ["AC/DC", "Sensor Type", "Substrate", "Graphene", "Coating"]
 
+    def get_configuration_names(self) -> List[str]:
+        """Return saved configuration names naturally sorted after the placeholder."""
+        if not self.configurations_csv_path.exists():
+            return ["No selection"]
+
+        try:
+            df = pd.read_csv(self.configurations_csv_path)
+        except Exception:
+            return ["No selection"]
+
+        if "configuration_name" not in df.columns:
+            return ["No selection"]
+
+        names = df["configuration_name"].fillna("").astype(str).str.strip().tolist()
+        unique_names = []
+        for name in names:
+            if name and name not in unique_names:
+                unique_names.append(name)
+
+        return ["No selection"] + natsorted(unique_names, alg=ns.IGNORECASE)
+
     def get_options_by_category(self) -> Dict[str, List[str]]:
         """Read the options from options.csv and group them by category."""
         if not self.options_csv_path.exists():
@@ -78,6 +100,9 @@ class DropdownData:
             if option_value not in options_by_category[category_name]:
                 options_by_category[category_name].append(option_value)
 
+        for category_name, values in options_by_category.items():
+            options_by_category[category_name] = natsorted(values, alg=ns.IGNORECASE)
+
         return options_by_category
 
     def get_used_options_by_category(self) -> Dict[str, List[str]]:
@@ -99,7 +124,7 @@ class DropdownData:
                     values.append(option_value)
 
             if values:
-                used_options_by_category[column_name] = values
+                used_options_by_category[column_name] = natsorted(values, alg=ns.IGNORECASE)
 
         return used_options_by_category
 

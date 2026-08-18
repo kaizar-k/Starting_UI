@@ -105,21 +105,7 @@ class ConfigPage(PageObject):
 
     def _get_configuration_names(self):
         """Return the saved configuration names with a No selection placeholder."""
-        try:
-            df = self.dropdown_data.configurations_csv_path
-            if not df.exists():
-                return ["No selection"]
-            import pandas as pd
-            configuration_df = pd.read_csv(df)
-        except Exception:
-            return ["No selection"]
-
-        names = configuration_df["configuration_name"].fillna("").astype(str).str.strip().tolist()
-        unique_names = []
-        for name in names:
-            if name and name not in unique_names:
-                unique_names.append(name)
-        return ["No selection"] + unique_names
+        return self.dropdown_data.get_configuration_names()
 
     def _handle_configuration_name_selection(self, layer_number, event=None):
         """When a preset is chosen, fill the layer's manual dropdowns from that configuration."""

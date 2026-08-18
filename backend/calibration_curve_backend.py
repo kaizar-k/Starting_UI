@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pandas as pd
+from backend.dropdown_backend import DropdownData
 
 
 class CalibrationCurveBackend:
@@ -53,20 +54,7 @@ class CalibrationCurveBackend:
         return self._normalize_threshold_forces_column(df)
 
     def get_configuration_names(self):
-        try:
-            df = self._read_configurations_df()
-        except Exception:
-            return ["No selection"]
-
-        if df.empty or "configuration_name" not in df.columns:
-            return ["No selection"]
-
-        names = df["configuration_name"].fillna("").astype(str).str.strip().tolist()
-        unique_names = []
-        for name in names:
-            if name and name not in unique_names:
-                unique_names.append(name)
-        return ["No selection"] + unique_names
+        return DropdownData(configurations_csv_path=str(self.configurations_csv_path)).get_configuration_names()
 
     def load_configuration_data(self, configuration_name: str):
         if not configuration_name or configuration_name == "No selection":

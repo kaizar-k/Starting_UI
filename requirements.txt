@@ -1,4 +1,4 @@
 # External dependencies for this project
-# tkinter is included with standard Python installations, so no extra package is required.
 pandas>=2.0
 pyserial>=3.5
+natsort>=8.4
