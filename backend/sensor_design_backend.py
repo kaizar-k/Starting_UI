@@ -70,6 +70,31 @@ class SensorDesignBackend:
                 df[column_name] = ""
         return df[["Sensor Design", "Dimensions", "Sensing Points"]]
 
+    def get_design_geometry(self, sensor_design_name: str) -> tuple | None:
+        """Return (dimensions, sensing_points) for a design name, or None when it cannot be used."""
+        if not sensor_design_name or sensor_design_name == "No selection":
+            return None
+
+        df = self._read_design_data_df()
+        if df.empty:
+            return None
+
+        matches = df[df["Sensor Design"].astype(str).str.strip() == sensor_design_name.strip()]
+        if matches.empty:
+            return None
+
+        row = matches.iloc[0]
+        try:
+            dimensions = json.loads(row["Dimensions"])
+            sensing_points = json.loads(row["Sensing Points"])
+        except (TypeError, ValueError):
+            # A hand-edited CSV can hold malformed JSON, which must not break the visualisation.
+            return None
+
+        if not dimensions or not sensing_points:
+            return None
+        return dimensions, sensing_points
+
     def add_sensor_design(
         self,
         sensor_design_name: str,
