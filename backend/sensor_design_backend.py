@@ -58,6 +58,35 @@ class SensorDesignBackend:
         # Layers without a saved selection default to "No selection" instead of being omitted.
         return [self.layer_sensor_types.get(layer_number, "No selection") for layer_number in range(1, layer_count + 1)]
 
+    def build_channel_map(self, layer_count: int) -> dict:
+        """Map each layer to its serial channel numbers, in sensing-point order.
+
+        Channels are numbered sequentially (1-based) across layers 1..layer_count.
+        A layer without a usable sensor design contributes no channels, so the
+        device is never asked to read from a redundant/unused channel.
+        """
+        channel_map = {}
+        next_channel = 1
+        for layer_number in range(1, layer_count + 1):
+            design_name = self.get_layer_sensor_type(layer_number)
+            geometry = self.get_design_geometry(design_name) if design_name else None
+
+            if geometry is None:
+                channel_map[layer_number] = []
+                continue
+
+            _, sensing_points = geometry
+            point_count = len(sensing_points)
+            channel_map[layer_number] = list(range(next_channel, next_channel + point_count))
+            next_channel += point_count
+
+        return channel_map
+
+    def get_total_channel_count(self, layer_count: int) -> int:
+        """Return the total number of channels needed to cover every layer's sensing points."""
+        channel_map = self.build_channel_map(layer_count)
+        return sum(len(channels) for channels in channel_map.values())
+
     def _read_design_data_df(self) -> pd.DataFrame:
         # Return an empty frame with the expected columns when the CSV doesn't exist yet.
         if not self.design_data_csv_path.exists():

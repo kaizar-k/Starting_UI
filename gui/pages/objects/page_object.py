@@ -54,7 +54,7 @@ class PageObject(tk.Frame):
 
         # Create the top navigation buttons needed for the current app flow.
         self.page_buttons = []
-        button_labels = ['Config', '2D plots', '3D plots', 'Add/remove']
+        button_labels = ['Config', 'Device', '2D plots', '3D plots', 'Add/remove']
         for button_num, button_text in enumerate(button_labels):
             self.page_buttons.append(Button(self.menu_frame, text=button_text))
             self.page_buttons[button_num].configure(font=HEADER_FONT)

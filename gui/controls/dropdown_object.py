@@ -34,3 +34,15 @@ class DropdownObject(ttk.Frame):
     def set(self, value):
         """Set the selected value programmatically."""
         self.var.set(value)
+
+    def set_state(self, state):
+        """Enable or disable the dropdown while preserving the current value."""
+        self.dropdown.configure(state=state)
+
+    def disable(self):
+        """Convenience method for locking a config control while the device is running."""
+        self.set_state("disabled")
+
+    def enable(self):
+        """Convenience method for re-enabling a config control when the device is stopped."""
+        self.set_state("readonly")

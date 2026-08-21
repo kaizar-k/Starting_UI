@@ -14,7 +14,8 @@ def csv_saver(channel_list):
     if res == "yes":
 
         nc = len(channel_list)-1
-        data_length=len(channel_list[0].return_raw_data())
+        data_lengths = [len(channel.return_raw_data()) for channel in channel_list]
+        data_length = max(data_lengths) if data_lengths else 0
         data_container = {}
 
         for k in range(nc+1):
@@ -46,7 +47,8 @@ def csv_saver(channel_list):
                 newrow = []
                 for j in range(nc+1):
                     if channel_list[j].selected is True:
-                        datapoint = data_container[f"channel_{j}"][i]
+                        channel_data = data_container[f"channel_{j}"]
+                        datapoint = channel_data[i] if i < len(channel_data) else ''
                     else:
                         # If the channel is not selected, write 'X'.
                         datapoint = 'X'

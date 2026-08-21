@@ -52,6 +52,7 @@ class ConfigPage(PageObject):
         self.layer_sensor_type_dropdowns = {}
         self.layer_warning_vars = {}
         self.layer_status_labels = {}
+        self.device_controls_locked = False
 
         # Other pages can register here to be notified when the layer configuration changes.
         self.layer_change_observers = []
@@ -107,8 +108,49 @@ class ConfigPage(PageObject):
         """Return the saved configuration names with a No selection placeholder."""
         return self.dropdown_data.get_configuration_names()
 
+    def is_layer_fully_configured(self, layer_number):
+        """A layer is complete only when both configuration name and sensor design are selected."""
+        config_dropdown = self.layer_config_name_dropdowns.get(layer_number)
+        sensor_dropdown = self.layer_sensor_type_dropdowns.get(layer_number)
+        configuration_name = config_dropdown.get() if config_dropdown else "No selection"
+        sensor_type = sensor_dropdown.get() if sensor_dropdown else "No selection"
+        return configuration_name != "No selection" and sensor_type != "No selection"
+
+    def get_incomplete_layers(self):
+        """Return all layer numbers that are missing either config name or sensor design."""
+        try:
+            layer_count = int(self.config_values.get("number_of_layers", "1"))
+        except ValueError:
+            layer_count = 1
+
+        return [
+            layer_number
+            for layer_number in range(1, layer_count + 1)
+            if not self.is_layer_fully_configured(layer_number)
+        ]
+
+    def set_device_running_state(self, is_running):
+        """Lock configuration widgets while the device is active so the recorded CSV is not invalidated mid-run."""
+        self.device_controls_locked = bool(is_running)
+        state = "disabled" if is_running else "readonly"
+
+        self.layers_dropdown.dropdown.configure(state=state)
+
+        for config_dropdown in self.layer_config_name_dropdowns.values():
+            config_dropdown.set_state(state)
+
+        for feature_group in self.layer_feature_dropdowns.values():
+            for dropdown in feature_group.values():
+                dropdown.set_state(state)
+
+        for sensor_dropdown in self.layer_sensor_type_dropdowns.values():
+            sensor_dropdown.set_state(state)
+
     def _handle_configuration_name_selection(self, layer_number, event=None):
         """When a preset is chosen, fill the layer's manual dropdowns from that configuration."""
+        if self.device_controls_locked:
+            return
+
         selected_name = self.layer_config_name_dropdowns[layer_number].get()
 
         if not selected_name or selected_name == "No selection":
@@ -129,6 +171,9 @@ class ConfigPage(PageObject):
 
     def _handle_manual_selection(self, layer_number, event=None):
         """When a manual category value changes, resolve the matching preset name for that layer."""
+        if self.device_controls_locked:
+            return
+
         selected_values = {}
         for feature_key, feature_label, _, _ in self.layer_feature_definitions:
             dropdown = self.layer_feature_dropdowns.get(layer_number, {}).get(feature_key)
@@ -150,10 +195,16 @@ class ConfigPage(PageObject):
 
     def _handle_sensor_type_selection(self, layer_number, event=None):
         """Store the sensor design chosen for this layer."""
+        if self.device_controls_locked:
+            return
+
         sensor_type = self.layer_sensor_type_dropdowns[layer_number].get()
         self.sensor_design_backend.set_layer_sensor_type(layer_number, sensor_type)
         self._refresh_layer_status(layer_number)
         self._save_config_values()
+        # A changed sensor design changes each layer's sensing-point count, so
+        # dependent pages (2D diagrams, live channel count) must refresh too.
+        self._notify_layer_change_observers()
 
     def _refresh_layer_status(self, layer_number):
         """Show the configuration name and sensor design for this layer, or a warning if either is missing."""
@@ -259,6 +310,7 @@ class ConfigPage(PageObject):
             self._refresh_layer_status(layer_number)
 
         self._save_config_values()
+        self.set_device_running_state(bool(getattr(self.master, "active_device", None) and self.master.active_device.running))
 
         # Force the page canvas to recalculate its scroll region after the new layer controls are added.
         self._schedule_scroll_region_update()

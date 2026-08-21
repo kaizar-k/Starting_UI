@@ -94,7 +94,7 @@ def main():
     fig_ch5, ax_ch5 = plt.subplots()
     fig_ch5.set_size_inches(6, 4)
     ax_ch5.set_xlim(0, 100000)
-    ax_ch5.set_ylim(1500, 3500)
+    ax_ch5.set_ylim(2250, 2500)
     ax_ch5.set_title("Channel 5")
     ax_ch5.grid(True)
 

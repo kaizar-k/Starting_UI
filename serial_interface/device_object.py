@@ -11,6 +11,16 @@ from serial_interface.csv_saver import csv_saver
 
 class DeviceObject(serial.Serial):
 
+    @property
+    def in_waiting(self):
+        if hasattr(self, "_in_waiting"):
+            return self._in_waiting
+        return super().in_waiting
+
+    @in_waiting.setter
+    def in_waiting(self, value):
+        self._in_waiting = value
+
     def __init__(self,index,desc,com_port = 'COM3',config_string = "NC:1, SP:2",
                  baud_rate = 115200):
         super().__init__()
@@ -46,6 +56,14 @@ class DeviceObject(serial.Serial):
                 serial_output = self.readline().decode('utf-8',
                                                        errors='ignore').strip()
                 split_output = serial_output.split(", ")
+
+                if len(split_output) < self.num_channels + 1:
+                    # The firmware can briefly return a partial payload while a
+                    # channel count is changing or a read is mid-frame.
+                    return None
+
+                if len(split_output) > self.num_channels + 1:
+                    split_output = split_output[:self.num_channels + 1]
 
                 try:
                     timestamp = int(split_output[0])
@@ -110,6 +128,24 @@ class DeviceObject(serial.Serial):
 
     def check_connection(self):
         return self.is_open
+
+    def restart_with_new_config(self, new_config_string):
+        # Lets the channel count change instantly when it is running, without the
+        # save-as-csv prompt that a user-initiated stop_device() triggers.
+        was_running = self.running
+        if was_running:
+            self.write(bytes("stop\n", 'utf-8'))
+            time.sleep(0.05)
+            self.running = False
+
+        self.change_config_string(new_config_string)
+        self.channel_collection = []
+        self.set_up_channels()
+
+        if was_running:
+            self.start_device()
+
+        return self.running
 
     def start_device(self):
         if not self.running:

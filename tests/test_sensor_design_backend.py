@@ -81,3 +81,50 @@ def test_sensor_design_options_are_naturally_sorted(tmp_path):
     backend = SensorDesignBackend(str(design_data_path))
 
     assert backend.get_sensor_type_options() == ["1 Loop", "2 Loops", "10 Loops"]
+
+
+def _add_design_with_point_count(backend, name, point_count):
+    points = [
+        backend.build_sensing_point_payload([{
+            "x": 5, "y": 5, "radius_outer": "1", "radius_inner": "0", "area": "",
+        }])[0]
+        for _ in range(point_count)
+    ]
+    backend.add_sensor_design(name, [50, 50], points)
+
+
+def test_build_channel_map_matches_worked_example(tmp_path):
+    # Layer 1 has 3 sensing points, layer 2 has 1, so channels run 1-3 then 4.
+    backend = SensorDesignBackend(str(tmp_path / "design_data.csv"))
+    _add_design_with_point_count(backend, "3-point design", 3)
+    _add_design_with_point_count(backend, "1-point design", 1)
+    backend.set_layer_sensor_type(1, "3-point design")
+    backend.set_layer_sensor_type(2, "1-point design")
+
+    channel_map = backend.build_channel_map(2)
+
+    assert channel_map == {1: [1, 2, 3], 2: [4]}
+    assert backend.get_total_channel_count(2) == 4
+
+
+def test_build_channel_map_skips_unconfigured_layers_without_gaps(tmp_path):
+    # Layer 2 has no sensor design selected, so it contributes zero channels
+    # and layer 3's channels immediately follow layer 1's.
+    backend = SensorDesignBackend(str(tmp_path / "design_data.csv"))
+    _add_design_with_point_count(backend, "2-point design", 2)
+    backend.set_layer_sensor_type(1, "2-point design")
+    backend.set_layer_sensor_type(3, "2-point design")
+
+    channel_map = backend.build_channel_map(3)
+
+    assert channel_map == {1: [1, 2], 2: [], 3: [3, 4]}
+    assert backend.get_total_channel_count(3) == 4
+
+
+def test_build_channel_map_all_layers_unconfigured(tmp_path):
+    backend = SensorDesignBackend(str(tmp_path / "design_data.csv"))
+
+    channel_map = backend.build_channel_map(2)
+
+    assert channel_map == {1: [], 2: []}
+    assert backend.get_total_channel_count(2) == 0
