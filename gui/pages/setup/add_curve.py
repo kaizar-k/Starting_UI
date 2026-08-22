@@ -1,3 +1,4 @@
+import re
 import tkinter as tk
 from tkinter import ttk
 
@@ -46,6 +47,17 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
         self.upper_threshold_entry = ttk.Entry(self.top_frame, textvariable=self.upper_threshold_var, width=14)
         self.upper_threshold_entry.pack(side="left", anchor="n")
 
+        ttk.Label(self.top_frame, text="Force applicator area (mm²):").pack(side="left", padx=(8, 8), anchor="n")
+        self.force_applicator_area_var = tk.StringVar(value="380")
+        self.force_applicator_area_entry = ttk.Entry(
+            self.top_frame,
+            textvariable=self.force_applicator_area_var,
+            width=12,
+            validate="key",
+            validatecommand=(self.register(self._validate_numeric_input), "%P"),
+        )
+        self.force_applicator_area_entry.pack(side="left", anchor="n")
+
         self.regime_count_frame = ttk.Frame(self)
         self.regime_count_frame.pack(fill="x", anchor="w", pady=(10, 0))
 
@@ -72,6 +84,12 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
         save_button = ttk.Button(self, text="Save calibration curve", command=self._save_calibration_curve)
         save_button.pack(anchor="e", pady=(8, 0))
 
+    def _validate_numeric_input(self, proposed_value):
+        if proposed_value in ("", "-", ".", "-."):
+            return True
+
+        return bool(re.fullmatch(r"-?\d*\.?\d*", proposed_value))
+
     def _get_configuration_names(self):
         return self.backend.get_configuration_names()
 
@@ -80,6 +98,7 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
         if not configuration_name or configuration_name == "No selection":
             self.lower_threshold_var.set("0")
             self.upper_threshold_var.set("0")
+            self.force_applicator_area_var.set("380")
             self.regime_count_dropdown.set("1")
             self._refresh_regime_rows()
             return
@@ -88,6 +107,7 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
         threshold_forces = data.get("threshold_forces", [0.0, 0.0])
         self.lower_threshold_var.set(str(threshold_forces[0]))
         self.upper_threshold_var.set(str(threshold_forces[1]))
+        self.force_applicator_area_var.set(str(data.get("area", 380.0)))
 
         regime_count = max(1, min(5, data["regime_count"]))
         self.regime_count_dropdown.set(str(regime_count))
@@ -148,6 +168,7 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
         configuration_name = self.configuration_dropdown.get().strip()
         lower_threshold_value = self.lower_threshold_var.get().strip()
         upper_threshold_value = self.upper_threshold_var.get().strip()
+        force_applicator_area_value = self.force_applicator_area_var.get().strip()
 
         if not configuration_name or configuration_name == "No selection":
             self.message_label.config(text="Please choose a configuration name before saving the calibration curve.")
@@ -157,15 +178,24 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
             self.message_label.config(text="Please enter both the lower and upper threshold force values in grams.")
             return
 
+        if not force_applicator_area_value:
+            self.message_label.config(text="Please enter a valid force applicator area in mm².")
+            return
+
         try:
             lower_threshold = self.backend.validate_float(lower_threshold_value, "Lower threshold force")
             upper_threshold = self.backend.validate_float(upper_threshold_value, "Upper threshold force")
+            force_applicator_area = self.backend.validate_float(force_applicator_area_value, "Force applicator area")
         except ValueError as exc:
             self.message_label.config(text=str(exc))
             return
 
         if upper_threshold <= lower_threshold:
             self.message_label.config(text="Upper threshold force must be greater than the lower threshold force.")
+            return
+
+        if force_applicator_area <= 0:
+            self.message_label.config(text="Force applicator area must be greater than zero.")
             return
 
         try:
@@ -175,7 +205,12 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
             return
 
         try:
-            self.backend.save_calibration_curve(configuration_name, [lower_threshold, upper_threshold], regimes)
+            self.backend.save_calibration_curve(
+                configuration_name,
+                [lower_threshold, upper_threshold],
+                regimes,
+                area=force_applicator_area,
+            )
         except ValueError as exc:
             self.message_label.config(text=str(exc))
             return
@@ -189,6 +224,7 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
         self.configuration_dropdown.set("No selection")
         self.lower_threshold_var.set("0")
         self.upper_threshold_var.set("0")
+        self.force_applicator_area_var.set("380")
         self.regime_count_dropdown.set("1")
         self._refresh_regime_rows()
         self.message_label.config(text="")

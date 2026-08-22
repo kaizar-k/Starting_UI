@@ -58,16 +58,16 @@ class CalibrationCurveBackend:
 
     def load_configuration_data(self, configuration_name: str):
         if not configuration_name or configuration_name == "No selection":
-            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1}
+            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1, "area": 380.0}
 
         try:
             df = self._read_configurations_df()
         except Exception:
-            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1}
+            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1, "area": 380.0}
 
         row = df[df["configuration_name"].astype(str).str.strip() == configuration_name.strip()]
         if row.empty:
-            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1}
+            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1, "area": 380.0}
 
         row = row.iloc[0]
 
@@ -94,6 +94,14 @@ class CalibrationCurveBackend:
                     except Exception:
                         threshold_forces = [0.0, 0.0]
 
+        area_value = row.get("area")
+        area = 380.0
+        if pd.notna(area_value) and str(area_value).strip():
+            try:
+                area = float(str(area_value).strip())
+            except ValueError:
+                area = 380.0
+
         regimes_value = row.get("regimes")
         parsed_regimes = []
         if pd.notna(regimes_value) and str(regimes_value).strip():
@@ -110,7 +118,12 @@ class CalibrationCurveBackend:
                 parsed_regimes = [{"lower_bound_g": 0, "coefficients": [0.0] * 6}]
 
         regime_count = max(1, min(5, len(parsed_regimes)))
-        return {"threshold_forces": threshold_forces, "regimes": parsed_regimes[:5], "regime_count": regime_count}
+        return {
+            "threshold_forces": threshold_forces,
+            "regimes": parsed_regimes[:5],
+            "regime_count": regime_count,
+            "area": area,
+        }
 
     # @staticmethod means this method doesn't receive self and doesn't touch any instance data,
     # so it behaves like a plain function that just happens to live inside the class for organisation.
@@ -175,7 +188,7 @@ class CalibrationCurveBackend:
 
         return regimes
 
-    def save_calibration_curve(self, configuration_name: str, threshold_forces, regimes):
+    def save_calibration_curve(self, configuration_name: str, threshold_forces, regimes, area: float | str | None = None):
         df = self._read_configurations_df()
         if df.empty or "configuration_name" not in df.columns:
             raise ValueError("Could not find the configuration data file.")
@@ -186,6 +199,14 @@ class CalibrationCurveBackend:
 
         if not isinstance(threshold_forces, (list, tuple)) or len(threshold_forces) != 2:
             raise ValueError("Threshold forces must contain both a lower and upper value.")
+
+        if area is not None:
+            validated_area = self.validate_float(area, "Force applicator area")
+            if validated_area <= 0:
+                raise ValueError("Force applicator area must be greater than zero.")
+            if "area" not in df.columns:
+                df["area"] = None
+            df.loc[matches, "area"] = float(validated_area)
 
         df.loc[matches, "threshold_forces"] = json.dumps([float(threshold_forces[0]), float(threshold_forces[1])])
         df.loc[matches, "regimes"] = json.dumps(regimes)

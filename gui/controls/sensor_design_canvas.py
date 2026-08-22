@@ -5,20 +5,66 @@ class SensorDesignCanvas(tk.Canvas):
     """Fixed-size canvas that draws one sensor design and highlights sensing points on hover."""
 
     PADDING = 30
+    DEFAULT_RING_WIDTH = 2
+    ACTIVE_RING_WIDTH = 5
     # Zero-radius corner points have no radius to hit test against, so they use a fixed region.
     CORNER_HOVER_RADIUS = 2.0
     CORNER_SQUARE_HALF_WIDTH = 1.0
 
-    def __init__(self, master, dimensions, sensing_points, width=420, height=320, **kwargs):
+    def __init__(
+        self,
+        master,
+        dimensions,
+        sensing_points,
+        width=420,
+        height=320,
+        layer_number=None,
+        layer_count=1,
+        sensor_design_backend=None,
+        open_trace_callback=None,
+        **kwargs,
+    ):
         super().__init__(master, width=width, height=height, bg="white", highlightthickness=0, **kwargs)
         self.dimensions = dimensions
         self.sensing_points = sensing_points
+        self.layer_number = layer_number
+        self.layer_count = layer_count
+        self.sensor_design_backend = sensor_design_backend
+        self.open_trace_callback = open_trace_callback
+        self.hovered_index = None
 
         self.bind("<Configure>", lambda event: self.draw())
         self.bind("<Motion>", lambda event: self._update_hover_highlight(event.x, event.y))
         self.bind("<Leave>", lambda event: self._reset_highlight())
+        self.bind("<Button-1>", self._on_click)
 
         self.draw()
+
+    def resolve_point_to_channel(self, point_index):
+        """Map a clicked sensing point to the serial channel used for that live reading."""
+        if point_index is None or point_index < 1:
+            return None
+
+        if self.sensor_design_backend is None or self.layer_number is None:
+            return point_index
+
+        channel_map = self.sensor_design_backend.build_channel_map(self.layer_count)
+        channel_numbers = channel_map.get(self.layer_number, [])
+        if point_index - 1 >= len(channel_numbers):
+            return None
+        return channel_numbers[point_index - 1]
+
+    def _on_click(self, event):
+        """Open a trace plot when the user clicks the currently hovered sensing point."""
+        if self.hovered_index is None:
+            return
+
+        channel_number = self.resolve_point_to_channel(self.hovered_index)
+        if channel_number is None:
+            return
+
+        if self.open_trace_callback is not None:
+            self.open_trace_callback(self.layer_number, self.hovered_index, channel_number)
 
     def _get_transform(self):
         """Return the scale and centre used to map design coordinates onto canvas pixels."""
@@ -60,7 +106,7 @@ class SensorDesignCanvas(tk.Canvas):
                     x_px + outer * scale,
                     y_px + outer * scale,
                     outline="royalblue",
-                    width=2,
+                    width=self.DEFAULT_RING_WIDTH,
                     fill="white",
                     tags=(f"ring_{index}", "sensor_ring"),
                 )
@@ -71,7 +117,7 @@ class SensorDesignCanvas(tk.Canvas):
                         x_px + inner * scale,
                         y_px + inner * scale,
                         outline="royalblue",
-                        width=1,
+                        width=self.DEFAULT_RING_WIDTH,
                         fill="white",
                         tags=(f"hole_{index}", "sensor_hole"),
                     )
@@ -114,11 +160,17 @@ class SensorDesignCanvas(tk.Canvas):
                 hovered_index = index
                 break
 
+        self.hovered_index = hovered_index
+
         for index in range(1, len(self.sensing_points) + 1):
-            if index == hovered_index:
-                self.itemconfig(f"ring_{index}", outline="black", width=5)
-            else:
-                self.itemconfig(f"ring_{index}", outline="royalblue", width=2)
+            ring_outline = "black" if index == hovered_index else "royalblue"
+            ring_width = self.ACTIVE_RING_WIDTH if index == hovered_index else self.DEFAULT_RING_WIDTH
+            self.itemconfig(f"ring_{index}", outline=ring_outline, width=ring_width)
+
+            if self.find_withtag(f"hole_{index}"):
+                self.itemconfig(f"hole_{index}", outline=ring_outline, width=ring_width)
 
     def _reset_highlight(self):
-        self.itemconfig("sensor_ring", outline="royalblue", width=2)
+        self.hovered_index = None
+        self.itemconfig("sensor_ring", outline="royalblue", width=self.DEFAULT_RING_WIDTH)
+        self.itemconfig("sensor_hole", outline="royalblue", width=self.DEFAULT_RING_WIDTH)

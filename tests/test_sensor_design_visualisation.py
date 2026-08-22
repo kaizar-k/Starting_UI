@@ -10,6 +10,8 @@ import pandas as pd
 import tkinter as tk
 from tkinter import ttk
 
+from gui.controls.sensor_design_canvas import SensorDesignCanvas
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DESIGN_CSV = ROOT / "data" / "design_data.csv"
@@ -62,6 +64,53 @@ def animate_sensor_colours(canvas: tk.Canvas, duration_seconds: float = 10.0):
     canvas._colour_animation_id = canvas.after(20, update_colour)
 
 
+def test_sensor_design_canvas_inner_ring_matches_outer_border_style():
+    root = tk.Tk()
+    root.withdraw()
+    try:
+        canvas = SensorDesignCanvas(
+            root,
+            dimensions=(10, 10),
+            sensing_points=[{"x": 5, "y": 5, "radius_outer": 4, "radius_inner": 2}],
+            width=200,
+            height=200,
+        )
+
+        assert canvas.itemcget("ring_1", "width") in {"2", "2.0"}
+        assert canvas.itemcget("hole_1", "width") in {"2", "2.0"}
+
+        canvas._update_hover_highlight(100, 100)
+        assert canvas.itemcget("ring_1", "outline") == "black"
+        assert canvas.itemcget("ring_1", "width") in {"5", "5.0"}
+        assert canvas.itemcget("hole_1", "outline") == "black"
+        assert canvas.itemcget("hole_1", "width") in {"5", "5.0"}
+    finally:
+        root.destroy()
+
+
+def test_get_live_trace_series_returns_time_and_channel_data():
+    class FakeChannel:
+        def __init__(self, values):
+            self._values = list(values)
+
+        def return_raw_data(self):
+            return self._values
+
+    class FakeDevice:
+        def __init__(self):
+            self.channel_collection = [
+                FakeChannel([1000, 2000, 3000]),
+                FakeChannel([12.5, 13.4, 14.8]),
+            ]
+
+    from visualisation_backend.trace_visualisation import get_live_trace_series
+
+    time_series, resistance_series = get_live_trace_series(FakeDevice(), 1)
+
+    assert time_series == [1000, 2000, 3000]
+    assert resistance_series == [12.5, 13.4, 14.8]
+
+
 def update_hover_highlight(canvas: tk.Canvas, dimensions, sensing_points, mouse_x, mouse_y):
     width, height = dimensions
     padding = 30
@@ -89,17 +138,14 @@ def update_hover_highlight(canvas: tk.Canvas, dimensions, sensing_points, mouse_
 
     for index, point in enumerate(sensing_points, start=1):
         ring_tag = f"ring_{index}"
+        hole_tag = f"hole_{index}"
         label_tag = f"label_{index}"
-        if hovered_index == index:
-            canvas.itemconfig(ring_tag, outline="black", width=3)
-            canvas.itemconfig(label_tag, fill="black")
-        else:
-            canvas.itemconfig(ring_tag, outline="royalblue", width=2)
-            canvas.itemconfig(label_tag, fill="black")
-
-        # Make the active hover ring 50% thicker than the default outline.
-        if hovered_index == index:
-            canvas.itemconfig(ring_tag, width=5)
+        highlight_width = 5 if hovered_index == index else 2
+        outline = "black" if hovered_index == index else "royalblue"
+        canvas.itemconfig(ring_tag, outline=outline, width=highlight_width)
+        if canvas.find_withtag(hole_tag):
+            canvas.itemconfig(hole_tag, outline=outline, width=highlight_width)
+        canvas.itemconfig(label_tag, fill="black")
 
 
 def draw_sensor(canvas: tk.Canvas, design_name: str, dimensions, sensing_points):
@@ -147,14 +193,14 @@ def draw_sensor(canvas: tk.Canvas, design_name: str, dimensions, sensing_points)
                 tags=(f"ring_{index}", "sensor_ring"),
             )
             if inner > 0:
-                # Cut out the centre hole by drawing a smaller white oval on top of the annulus.
+                # Cut out the centre hole by drawing a smaller oval whose border matches the outer ring.
                 canvas.create_oval(
                     x_px - inner * scale,
                     y_px - inner * scale,
                     x_px + inner * scale,
                     y_px + inner * scale,
                     outline="royalblue",
-                    width=1,
+                    width=2,
                     fill="white",
                     tags=(f"hole_{index}", "sensor_hole"),
                 )

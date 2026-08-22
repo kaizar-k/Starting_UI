@@ -1,8 +1,8 @@
-class ResistanceToPressure:
+class PressureVisualisation:
     def __init__(self, sensor_design_backend):
         self.sensor_design_backend = sensor_design_backend
 
-    def calculate_resistance_to_pressure(self, pressure):
+    def calculate_resistance_to_pressure(self, resistance, pressure):
         # Get the sensor design parameters
         sensor_params = self.sensor_design_backend.get_sensor_design_parameters()
 

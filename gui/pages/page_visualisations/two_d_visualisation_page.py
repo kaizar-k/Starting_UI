@@ -4,6 +4,7 @@ from tkinter import ttk
 from gui.controls.sensor_design_canvas import SensorDesignCanvas
 from gui.pages.objects.page_object import PageObject
 from visualisation_backend.layer_text_backend import LayerTextBackend
+from visualisation_backend.trace_visualisation import TracePopup
 
 # Live resistance labels are refreshed on this interval rather than per serial read.
 LIVE_VALUE_REFRESH_MS = 100
@@ -30,6 +31,7 @@ class TwoDVisualisationPage(PageObject):
 
         # Rows currently displayed, refreshed whenever the layer selection changes.
         self._live_value_rows = []
+        self._trace_windows = {}
 
         self.refresh_selected_layers_display()
         self.after(LIVE_VALUE_REFRESH_MS, self._update_live_values)
@@ -37,6 +39,27 @@ class TwoDVisualisationPage(PageObject):
     def refresh_from_config(self):
         """Refresh the 2D page when the config object changes."""
         self.refresh_selected_layers_display()
+
+    def open_trace_for_point(self, layer_number, point_index, channel_number):
+        """Open a live trace window for the clicked sensor point."""
+        if self.master.active_device is None:
+            return
+
+        key = (layer_number, point_index)
+        existing = self._trace_windows.get(key)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            existing.focus_force()
+            return
+
+        popup = TracePopup(
+            self,
+            layer_number=layer_number,
+            point_index=point_index,
+            channel_number=channel_number,
+            active_device=self.master.active_device,
+        )
+        self._trace_windows[key] = popup.window
 
     def refresh_selected_layers_display(self):
         for widget in self.diagrams_frame.winfo_children():
@@ -89,11 +112,23 @@ class TwoDVisualisationPage(PageObject):
             layer_content_frame.pack(anchor="w", fill="x")
 
             dimensions, sensing_points = geometry
-            SensorDesignCanvas(layer_content_frame, dimensions, sensing_points).pack(side="left", anchor="n")
+            SensorDesignCanvas(
+                layer_content_frame,
+                dimensions,
+                sensing_points,
+                layer_number=layer_number,
+                layer_count=layer_count,
+                sensor_design_backend=sensor_design_backend,
+                open_trace_callback=self.open_trace_for_point,
+            ).pack(side="left", anchor="n")
 
             # Vertical list of live resistances, one row per sensing point, next to the diagram.
             points_frame = ttk.Frame(layer_content_frame, padding=(15, 0))
             points_frame.pack(side="left", anchor="n")
+
+            ttk.Label(points_frame, text="Resistances (Ω):", font=("Segoe UI", 10, "bold")).pack(
+                anchor="w", pady=(0, 4)
+            )
 
             rows = layer_text_backend.build_layer_point_rows(layer_number, layer_count, self.master.active_device)
             for point_index, _channel_number, label_text in rows:

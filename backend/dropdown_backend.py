@@ -15,6 +15,7 @@ class DropdownData:
         "threshold_forces",
         "regimes",
         "hysteresis_ratios",
+        "area",
     }
 
     def _get_sensor_identity_columns(self, df: pd.DataFrame) -> List[str]:
