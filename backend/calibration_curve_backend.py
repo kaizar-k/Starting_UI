@@ -1,6 +1,8 @@
 import json
+import math
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from backend.dropdown_backend import DropdownData
 
@@ -117,6 +119,9 @@ class CalibrationCurveBackend:
             if pd.notna(legacy_regimes) and str(legacy_regimes).strip():
                 parsed_regimes = [{"lower_bound_g": 0, "coefficients": [0.0] * 6}]
 
+        # This is the in-memory runtime structure used by the rest of the app after a config has
+        # been loaded from the CSV. It keeps the ordered list of calibration regimes together so the
+        # code can classify each live resistance reading against the correct regime in sequence.
         regime_count = max(1, min(5, len(parsed_regimes)))
         return {
             "threshold_forces": threshold_forces,
@@ -143,28 +148,79 @@ class CalibrationCurveBackend:
             raise ValueError(f"{field_name} must be a valid number.") from exc
 
     def normalize_coefficients_for_ui(self, coefficients):
-        if not coefficients:
-            return [0.0] * 6
-
-        cleaned = [float(value) for value in coefficients[:6]]
-        while len(cleaned) > 1 and cleaned[0] == 0:
-            cleaned = cleaned[1:]
-
-        if not cleaned:
-            cleaned = [0.0]
-
+        cleaned = self._normalise_polynomial_coefficients(coefficients[:6] if coefficients else [0.0])
         return [0.0] * max(0, 6 - len(cleaned)) + cleaned
 
+    @staticmethod
+    def _normalise_polynomial_coefficients(coefficients):
+        # Coefficients are stored highest-power first (e.g. [a2, a1, a0] for a quadratic),
+        # which is the same convention expected by numpy.poly1d/polyval/roots.
+        if coefficients is None:
+            return [0.0]
+
+        cleaned = [float(value) for value in coefficients]
+        if not cleaned:
+            return [0.0]
+
+        while len(cleaned) > 1 and abs(cleaned[0]) < 1e-12:
+            cleaned = cleaned[1:]
+
+        return cleaned if cleaned else [0.0]
+
+    def compute_polynomial_intersection(self, previous_coefficients, current_coefficients, previous_lower_bound=0.0):
+        previous_coefficients = self._normalise_polynomial_coefficients(previous_coefficients)
+        current_coefficients = self._normalise_polynomial_coefficients(current_coefficients)
+
+        previous_poly = np.poly1d(previous_coefficients)
+        current_poly = np.poly1d(current_coefficients)
+        difference_poly = previous_poly - current_poly
+
+        roots = np.roots(difference_poly.coeffs)
+        valid_roots = []
+        for root in roots:
+            if abs(root.imag) > 1e-9:
+                continue
+
+            real_root = float(root.real)
+            if not math.isfinite(real_root):
+                continue
+
+            if real_root > previous_lower_bound:
+                valid_roots.append(real_root)
+
+        if not valid_roots:
+            raise ValueError("No valid intersection was found for the adjacent calibration regimes.")
+
+        return min(valid_roots)
+
     def build_regime_payload(self, regime_entries):
+        # Regimes are stored in a list, not a dictionary, because order matters. The runtime code
+        # compares each regime in sequence to find the active regime for a new resistance reading.
         regimes = []
-        previous_lower_bound = None
+        previous_lower_bound = 0.0
         for regime_index, regime_entry in enumerate(regime_entries, start=1):
-            lower_bound_text = regime_entry["lower_bound"].get().strip()
-            lower_bound = self.validate_float(lower_bound_text, f"Lower bound for regime {regime_index}")
+            if regime_index == 1:
+                lower_bound = 0.0
+            else:
+                previous_coefficients = self._normalise_polynomial_coefficients(regimes[-1]["coefficients"])
+                current_coefficients = []
+                for coeff_index, coefficient_var in enumerate(regime_entry["coefficients"], start=1):
+                    coefficient_value = self.validate_float(
+                        coefficient_var.get(),
+                        f"Coefficient {coeff_index} for regime {regime_index}",
+                    )
+                    current_coefficients.append(coefficient_value)
+                current_coefficients = self._normalise_polynomial_coefficients(current_coefficients)
+                lower_bound = self.compute_polynomial_intersection(
+                    previous_coefficients,
+                    current_coefficients,
+                    previous_lower_bound=previous_lower_bound,
+                )
+
             if lower_bound < 0:
                 raise ValueError(f"Lower bound for regime {regime_index} must be 0 or greater.")
 
-            if previous_lower_bound is not None and lower_bound <= previous_lower_bound:
+            if regime_index > 1 and lower_bound <= previous_lower_bound:
                 raise ValueError(
                     f"Lower bound for regime {regime_index} must be greater than the lower bound of the previous regime."
                 )
@@ -183,6 +239,8 @@ class CalibrationCurveBackend:
             if not coefficients:
                 coefficients = [0.0]
 
+            # Final runtime payload shape: every regime is a dict containing the lower force boundary
+            # for that regime and the polynomial coefficients for the resistance-vs-force curve.
             regimes.append({"lower_bound_g": lower_bound, "coefficients": coefficients})
             previous_lower_bound = lower_bound
 
@@ -208,6 +266,8 @@ class CalibrationCurveBackend:
                 df["area"] = None
             df.loc[matches, "area"] = float(validated_area)
 
+        # Persist the runtime calibration payload to the CSV as JSON text. This is the filesystem
+        # format, while the Python code uses the parsed dict/list version in memory.
         df.loc[matches, "threshold_forces"] = json.dumps([float(threshold_forces[0]), float(threshold_forces[1])])
         df.loc[matches, "regimes"] = json.dumps(regimes)
         df.to_csv(self.configurations_csv_path, index=False)

@@ -123,6 +123,39 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
                 coefficient_var.set(str(coefficient_value))
             self.regime_entries[index]["lower_bound"].set(str(lower_bound))
 
+    def _coefficients_from_entry_row(self, regime_entry):
+        coefficients = []
+        for coefficient_var in regime_entry["coefficients"]:
+            try:
+                coefficients.append(float(coefficient_var.get().strip()))
+            except ValueError:
+                coefficients.append(0.0)
+        return coefficients
+
+    def _refresh_regime_lower_bounds(self):
+        previous_lower_bound = 0.0
+        for regime_index, regime_entry in enumerate(self.regime_entries):
+            lower_bound_var = regime_entry["lower_bound"]
+            if regime_index == 0:
+                lower_bound_var.set("0")
+                previous_lower_bound = 0.0
+                continue
+
+            previous_coefficients = self._coefficients_from_entry_row(self.regime_entries[regime_index - 1])
+            current_coefficients = self._coefficients_from_entry_row(regime_entry)
+
+            try:
+                computed_lower_bound = self.backend.compute_polynomial_intersection(
+                    previous_coefficients,
+                    current_coefficients,
+                    previous_lower_bound=previous_lower_bound,
+                )
+            except ValueError:
+                computed_lower_bound = previous_lower_bound
+
+            lower_bound_var.set(f"{computed_lower_bound:g}")
+            previous_lower_bound = computed_lower_bound
+
     def _refresh_regime_rows(self, event=None):
         for widget in self.regime_rows_frame.winfo_children():
             widget.destroy()
@@ -147,9 +180,13 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
             for power in [5, 4, 3, 2, 1, 0]:
                 label_text = superscript_labels[power]
                 entry_var = tk.StringVar(value="0")
+                entry_var.trace_add("write", lambda *_: self.after_idle(self._refresh_regime_lower_bounds))
                 coeff_vars.append(entry_var)
 
-                ttk.Entry(regime_frame, textvariable=entry_var, width=8).pack(side="left", anchor="n", padx=(0, 4))
+                entry_widget = ttk.Entry(regime_frame, textvariable=entry_var, width=8)
+                entry_widget.bind("<KeyRelease>", lambda event: self.after_idle(self._refresh_regime_lower_bounds))
+                entry_widget.bind("<FocusOut>", lambda event: self._refresh_regime_lower_bounds())
+                entry_widget.pack(side="left", anchor="n", padx=(0, 4))
                 if label_text:
                     ttk.Label(regime_frame, text=label_text, font=power_font).pack(side="left", anchor="n", padx=(0, 6))
                 if power != 0:
@@ -157,12 +194,13 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
 
             lower_bound_var = tk.StringVar(value="0")
             ttk.Label(regime_frame, text="Lower bound (g):").pack(side="left", anchor="n", padx=(12, 5))
-            ttk.Entry(regime_frame, textvariable=lower_bound_var, width=10).pack(side="left", anchor="n")
+            ttk.Entry(regime_frame, textvariable=lower_bound_var, width=10, state="readonly").pack(side="left", anchor="n")
             self.regime_entries.append({"lower_bound": lower_bound_var, "coefficients": coeff_vars})
 
-        # Storage convention: we keep the coefficient list in the order [c0, c1, c2, c3, c4, c5],
-        # so the coefficient sits at the front of the list. This preserves a simple, stable format
-        # even if we later increase the polynomial degree without needing to shift existing values.
+        self._refresh_regime_lower_bounds()
+
+        # Storage convention: coefficient entries are kept highest-power first [c5, c4, c3, c2, c1, c0],
+        # matching numpy poly1d/polyval expectations used by calibration and runtime pressure conversion.
 
     def _save_calibration_curve(self):
         configuration_name = self.configuration_dropdown.get().strip()

@@ -1,13 +1,17 @@
 import tkinter as tk
 from tkinter import ttk
 
+from backend.calibration_curve_backend import CalibrationCurveBackend
 from gui.controls.sensor_design_canvas import SensorDesignCanvas
 from gui.pages.objects.page_object import PageObject
 from visualisation_backend.layer_text_backend import LayerTextBackend
+from visualisation_backend.pressure_visualisation import PressureVisualisation
 from visualisation_backend.trace_visualisation import TracePopup
 
 # Live resistance labels are refreshed on this interval rather than per serial read.
 LIVE_VALUE_REFRESH_MS = 100
+# 1 gram-force per mm^2 equals 9806.65 Pascals.
+GRAM_PER_MM2_TO_PA = 9806.65
 
 
 class TwoDVisualisationPage(PageObject):
@@ -32,6 +36,9 @@ class TwoDVisualisationPage(PageObject):
         # Rows currently displayed, refreshed whenever the layer selection changes.
         self._live_value_rows = []
         self._trace_windows = {}
+        self._layer_channel_map = {}
+        self._layer_calibration_inputs = {}
+        self._calibration_backend = CalibrationCurveBackend()
 
         self.refresh_selected_layers_display()
         self.after(LIVE_VALUE_REFRESH_MS, self._update_live_values)
@@ -65,6 +72,9 @@ class TwoDVisualisationPage(PageObject):
         for widget in self.diagrams_frame.winfo_children():
             widget.destroy()
         self._live_value_rows = []
+        self._layer_channel_map = {}
+        self._layer_calibration_inputs = {}
+        PressureVisualisation.reset_runtime_state()
 
         config_page = self.master.pages[0]
         selected_layers = config_page.config_values.get("options_1_selected_layers", [])
@@ -90,9 +100,18 @@ class TwoDVisualisationPage(PageObject):
         except ValueError:
             layer_count = 1
 
+        self._layer_channel_map = sensor_design_backend.build_channel_map(layer_count)
+
         for layer_number in display_layers:
             design_name = sensor_design_backend.get_layer_sensor_type(layer_number)
             geometry = sensor_design_backend.get_design_geometry(design_name) if design_name else None
+            config_dropdown = config_page.layer_config_name_dropdowns.get(layer_number)
+            configuration_name = config_dropdown.get() if config_dropdown is not None else "No selection"
+            calibration_data = self._calibration_backend.load_configuration_data(configuration_name)
+            self._layer_calibration_inputs[layer_number] = {
+                "calibration_data": calibration_data,
+                "area": float(calibration_data.get("area", 380.0)),
+            }
 
             layer_frame = ttk.LabelFrame(
                 self.diagrams_frame,
@@ -122,28 +141,79 @@ class TwoDVisualisationPage(PageObject):
                 open_trace_callback=self.open_trace_for_point,
             ).pack(side="left", anchor="n")
 
-            # Vertical list of live resistances, one row per sensing point, next to the diagram.
+            # Vertical list of live pressures and resistances, one row per sensing point, next to the diagram.
             points_frame = ttk.Frame(layer_content_frame, padding=(15, 0))
             points_frame.pack(side="left", anchor="n")
 
-            ttk.Label(points_frame, text="Resistances (Ω):", font=("Segoe UI", 10, "bold")).pack(
-                anchor="w", pady=(0, 4)
+            heading_frame = ttk.Frame(points_frame)
+            heading_frame.pack(anchor="w", pady=(0, 4))
+            ttk.Label(heading_frame, text="Point", font=("Segoe UI", 10, "bold"), width=8).grid(
+                row=0, column=0, sticky="w", padx=(0, 10)
+            )
+            ttk.Label(heading_frame, text="Pressure (Pa)", font=("Segoe UI", 10, "bold"), width=18).grid(
+                row=0, column=1, sticky="w", padx=(0, 10)
+            )
+            ttk.Label(heading_frame, text="Resistance (Ω)", font=("Segoe UI", 10, "bold"), width=18).grid(
+                row=0, column=2, sticky="w"
             )
 
             rows = layer_text_backend.build_layer_point_rows(layer_number, layer_count, self.master.active_device)
-            for point_index, _channel_number, label_text in rows:
-                row_var = tk.StringVar(value=label_text)
-                ttk.Label(points_frame, textvariable=row_var).pack(anchor="w")
-                self._live_value_rows.append((row_var, layer_number, point_index))
+            for point_index, channel_number, _label_text in rows:
+                row_frame = ttk.Frame(points_frame)
+                row_frame.pack(anchor="w", pady=(0, 1))
+
+                ttk.Label(row_frame, text=f"Point {point_index}", width=8).grid(row=0, column=0, sticky="w", padx=(0, 10))
+
+                pressure_var = tk.StringVar(value="--")
+                resistance_var = tk.StringVar(value="--")
+                ttk.Label(row_frame, textvariable=pressure_var, width=18).grid(row=0, column=1, sticky="w", padx=(0, 10))
+                ttk.Label(row_frame, textvariable=resistance_var, width=18).grid(row=0, column=2, sticky="w")
+                self._live_value_rows.append((pressure_var, resistance_var, layer_number, point_index, channel_number))
 
         self._layer_text_backend = layer_text_backend
         self._layer_count = layer_count
 
     def _update_live_values(self):
         active_device = self.master.active_device
-        for row_var, layer_number, point_index in self._live_value_rows:
-            rows = self._layer_text_backend.build_layer_point_rows(layer_number, self._layer_count, active_device)
-            if point_index - 1 < len(rows):
-                row_var.set(rows[point_index - 1][2])
+        rows_by_layer = {}
+        for _pressure_var, _resistance_var, layer_number, _point_index, _channel_number in self._live_value_rows:
+            if layer_number not in rows_by_layer:
+                rows_by_layer[layer_number] = self._layer_text_backend.build_layer_point_rows(
+                    layer_number,
+                    self._layer_count,
+                    active_device,
+                )
+
+        pressure_by_layer = {}
+        for layer_number, calibration_input in self._layer_calibration_inputs.items():
+            channel_numbers = self._layer_channel_map.get(layer_number, [])
+            if not channel_numbers:
+                pressure_by_layer[layer_number] = []
+                continue
+
+            layer_pressures = PressureVisualisation.get_pressure_for_all_points(
+                active_device=active_device,
+                channel_map={layer_number: channel_numbers},
+                calibration_data=calibration_input["calibration_data"],
+                area=calibration_input["area"],
+            )
+            pressure_by_layer[layer_number] = layer_pressures.get(layer_number, [])
+
+        for pressure_var, resistance_var, layer_number, point_index, _channel_number in self._live_value_rows:
+            rows = rows_by_layer.get(layer_number, [])
+            if point_index - 1 >= len(rows):
+                continue
+
+            resistance_label = rows[point_index - 1][2]
+            resistance_text = resistance_label.split(": ", 1)[1] if ": " in resistance_label else resistance_label
+            layer_pressures = pressure_by_layer.get(layer_number, [])
+            pressure_value = layer_pressures[point_index - 1] if point_index - 1 < len(layer_pressures) else None
+            if pressure_value is None:
+                pressure_text = "--"
+            else:
+                pressure_text = f"{pressure_value * GRAM_PER_MM2_TO_PA:.2f}"
+
+            pressure_var.set(pressure_text)
+            resistance_var.set(resistance_text)
 
         self.after(LIVE_VALUE_REFRESH_MS, self._update_live_values)

@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from gui.pages.objects.page_object import PageObject
+from visualisation_backend.pressure_visualisation import PressureVisualisation
 
 
 class DeviceConnectionPage(PageObject):
@@ -122,6 +123,8 @@ class DeviceConnectionPage(PageObject):
 
         device.change_config_string(f"NC:{channel_count}, SP:10")
         device.set_up_channels()
+        # Each run should learn a fresh startup baseline per sensing point.
+        PressureVisualisation.reset_runtime_state()
         device.start_device()
         self._start_polling(device)
         self.master.pages[0].set_device_running_state(device.running)
@@ -151,6 +154,10 @@ class DeviceConnectionPage(PageObject):
         if was_running:
             self._stop_polling.set()
 
+        # restart_with_new_config() stops then starts the device when it was already running,
+        # so clear cached baselines to force fresh startup calibration on the new run.
+        if was_running:
+            PressureVisualisation.reset_runtime_state()
         device.restart_with_new_config(f"NC:{channel_count}, SP:10")
 
         if device.running:

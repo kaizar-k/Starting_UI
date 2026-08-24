@@ -1,4 +1,5 @@
 # External dependencies for this project
 pandas>=2.0
+numpy>=1.24
 pyserial>=3.5
 natsort>=8.4
