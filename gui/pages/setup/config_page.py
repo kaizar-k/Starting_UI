@@ -33,6 +33,8 @@ class ConfigPage(PageObject):
             "layer_description": [],
             # Store the layers selected in the options popup so other pages can read them.
             "options_1_selected_layers": [],
+            # Keep the 3D visualisation opt-in so it does not do expensive live work unless enabled.
+            "show_3d_plot": False,
             # Sensor type selected for each layer, in layer order.
             "layer_sensor_types": [],
         }

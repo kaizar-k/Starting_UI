@@ -7,6 +7,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
+import pytest
 import tkinter as tk
 from tkinter import ttk
 
@@ -15,6 +16,15 @@ from gui.controls.sensor_design_canvas import SensorDesignCanvas
 
 ROOT = Path(__file__).resolve().parents[1]
 DESIGN_CSV = ROOT / "data" / "design_data.csv"
+
+
+def _create_tk_root_or_skip():
+    try:
+        root = tk.Tk()
+    except tk.TclError as exc:
+        pytest.skip(f"Tk is unavailable in this environment: {exc}")
+    root.withdraw()
+    return root
 
 
 def load_design(name: str):
@@ -65,8 +75,7 @@ def animate_sensor_colours(canvas: tk.Canvas, duration_seconds: float = 10.0):
 
 
 def test_sensor_design_canvas_inner_ring_matches_outer_border_style():
-    root = tk.Tk()
-    root.withdraw()
+    root = _create_tk_root_or_skip()
     try:
         canvas = SensorDesignCanvas(
             root,
@@ -84,6 +93,30 @@ def test_sensor_design_canvas_inner_ring_matches_outer_border_style():
         assert canvas.itemcget("ring_1", "width") in {"5", "5.0"}
         assert canvas.itemcget("hole_1", "outline") == "black"
         assert canvas.itemcget("hole_1", "width") in {"5", "5.0"}
+    finally:
+        root.destroy()
+
+
+def test_sensor_design_canvas_heatmap_scales_between_zero_and_max_pressure():
+    root = _create_tk_root_or_skip()
+    try:
+        canvas = SensorDesignCanvas(
+            root,
+            dimensions=(10, 10),
+            sensing_points=[{"x": 5, "y": 5, "radius_outer": 4, "radius_inner": 2}],
+            width=200,
+            height=200,
+        )
+
+        canvas.set_heatmap_values([0.0], [1000.0])
+        zero_fill = canvas.itemcget("ring_1", "fill")
+
+        canvas.set_heatmap_values([1000.0], [1000.0])
+        max_fill = canvas.itemcget("ring_1", "fill")
+
+        assert zero_fill == SensorDesignCanvas._turbo_colour_hex(0.0)
+        assert max_fill == SensorDesignCanvas._turbo_colour_hex(1.0)
+        assert zero_fill != max_fill
     finally:
         root.destroy()
 

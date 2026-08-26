@@ -12,6 +12,7 @@ class PressureVisualisation:
     """Runtime conversion helpers for resistance, force, and pressure."""
 
     # Runtime cache (RAM only) used while a stream is active.
+    _runtime_states = {}
     _runtime_signature = None
     _runtime_regimes = []
     _runtime_point_state = {}
@@ -20,6 +21,7 @@ class PressureVisualisation:
     @staticmethod
     def reset_runtime_state():
         """Clear all cached runtime state so the next call re-initialises baselines."""
+        PressureVisualisation._runtime_states = {}
         PressureVisualisation._runtime_signature = None
         PressureVisualisation._runtime_regimes = []
         PressureVisualisation._runtime_point_state = {}
@@ -93,18 +95,34 @@ class PressureVisualisation:
     @staticmethod
     def _ensure_runtime_ready(calibration_data, area):
         signature = PressureVisualisation._build_runtime_signature(calibration_data, area)
-        if signature == PressureVisualisation._runtime_signature:
-            return
+        # Keep an independent cache per calibration signature so switching layers/configurations
+        # does not wipe baselines that were already established for other signatures.
+        if signature not in PressureVisualisation._runtime_states:
+            PressureVisualisation._runtime_states[signature] = {
+                "regimes": PressureVisualisation._build_runtime_regimes(
+                    calibration_data.get("regimes", []),
+                    calibration_data.get("threshold_forces", [0.0, 0.0]),
+                ),
+                "point_state": {},
+            }
 
+        state_bundle = PressureVisualisation._runtime_states[signature]
+        # Expose the active signature bundle through legacy class attributes used elsewhere.
         PressureVisualisation._runtime_signature = signature
-        PressureVisualisation._runtime_point_state = {}
-        PressureVisualisation._runtime_regimes = PressureVisualisation._build_runtime_regimes(
-            calibration_data.get("regimes", []),
-            calibration_data.get("threshold_forces", [0.0, 0.0]),
-        )
+        PressureVisualisation._runtime_regimes = state_bundle["regimes"]
+        PressureVisualisation._runtime_point_state = state_bundle["point_state"]
 
     @staticmethod
-    def _get_or_create_point_state(channel_number, samples):
+    def _compute_max_pressure_from_configuration(threshold_forces, area):
+        # Convert the configured force ceiling into Pa so each point can be colour-scaled
+        # against the same physical max for that configuration.
+        max_force = float(threshold_forces[1]) if len(threshold_forces) >= 2 else 0.0
+        if area <= 0:
+            return 0.0
+        return float((max_force / area) * 9806.65)
+
+    @staticmethod
+    def _get_or_create_point_state(channel_number, samples, threshold_forces, area):
         state = PressureVisualisation._runtime_point_state.get(channel_number)
         if state is not None:
             return state
@@ -122,10 +140,13 @@ class PressureVisualisation:
                 }
             )
 
+        max_pressure = PressureVisualisation._compute_max_pressure_from_configuration(threshold_forces, area)
+
         state = {
             "sensor_point_channel": int(channel_number),
             "baseline_resistance": baseline,
             "previous_force": None,
+            "max_pressure": max_pressure,
             "regimes": runtime_regimes,
         }
         PressureVisualisation._runtime_point_state[channel_number] = state
@@ -282,6 +303,8 @@ class PressureVisualisation:
         if not PressureVisualisation._runtime_regimes:
             return {}
 
+        threshold_forces = calibration_data.get("threshold_forces", [0.0, 0.0])
+
         pressure_by_point = {}
         for layer_number, channel_numbers in channel_map.items():
             layer_values = []
@@ -297,7 +320,12 @@ class PressureVisualisation:
                     continue
 
                 latest_resistance = float(samples[-1])
-                point_state = PressureVisualisation._get_or_create_point_state(channel_number, samples)
+                point_state = PressureVisualisation._get_or_create_point_state(
+                    channel_number,
+                    samples,
+                    threshold_forces,
+                    area,
+                )
                 if point_state is None:
                     # Not enough startup values yet to lock a baseline for this sensor point.
                     layer_values.append(None)

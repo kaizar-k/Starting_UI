@@ -1,5 +1,9 @@
 import tkinter as tk
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
 
 class SensorDesignCanvas(tk.Canvas):
     """Fixed-size canvas that draws one sensor design and highlights sensing points on hover."""
@@ -32,12 +36,53 @@ class SensorDesignCanvas(tk.Canvas):
         self.sensor_design_backend = sensor_design_backend
         self.open_trace_callback = open_trace_callback
         self.hovered_index = None
+        self.point_pressures_pa = []
+        self.point_max_pressures_pa = []
 
         self.bind("<Configure>", lambda event: self.draw())
         self.bind("<Motion>", lambda event: self._update_hover_highlight(event.x, event.y))
         self.bind("<Leave>", lambda event: self._reset_highlight())
         self.bind("<Button-1>", self._on_click)
 
+        self.draw()
+
+    @staticmethod
+    def _rgb_to_hex(rgb):
+        return "#{:02x}{:02x}{:02x}".format(*rgb)
+
+    @staticmethod
+    def _clamp_unit_interval(value):
+        return max(0.0, min(1.0, float(value)))
+
+    @staticmethod
+    def _turbo_colour_hex(progress):
+        progress = SensorDesignCanvas._clamp_unit_interval(progress)
+        colour = plt.get_cmap("turbo")(progress)
+        return SensorDesignCanvas._rgb_to_hex(tuple(int(channel * 255) for channel in colour[:3]))
+
+    def _get_point_heatmap_fill(self, point_index):
+        if point_index - 1 >= len(self.point_max_pressures_pa):
+            return "white"
+
+        max_pressure_pa = float(self.point_max_pressures_pa[point_index - 1] or 0.0)
+        if max_pressure_pa <= 0:
+            return "white"
+
+        point_pressure_pa = 0.0
+        if point_index - 1 < len(self.point_pressures_pa):
+            value = self.point_pressures_pa[point_index - 1]
+            if value is not None:
+                point_pressure_pa = max(0.0, float(value))
+
+        # Scale each region independently from 0 Pa to that point's configured max pressure.
+        progress = point_pressure_pa / max_pressure_pa
+        return self._turbo_colour_hex(progress)
+
+    def set_heatmap_values(self, point_pressures_pa, point_max_pressures_pa):
+        """Update live pressure inputs (Pa) used to colour each sensing region."""
+        # Values are copied to keep rendering deterministic even if caller mutates source lists.
+        self.point_pressures_pa = list(point_pressures_pa or [])
+        self.point_max_pressures_pa = list(point_max_pressures_pa or [])
         self.draw()
 
     def resolve_point_to_channel(self, point_index):
@@ -98,6 +143,7 @@ class SensorDesignCanvas(tk.Canvas):
             outer = float(point.get("radius_outer", 0.0) or 0.0)
             inner = float(point.get("radius_inner", 0.0) or 0.0)
             x_px, y_px = self._to_pixels(float(point["x"]), float(point["y"]), scale, cx, cy)
+            fill_colour = self._get_point_heatmap_fill(index)
 
             if outer > 0:
                 ring = self.create_oval(
@@ -107,7 +153,7 @@ class SensorDesignCanvas(tk.Canvas):
                     y_px + outer * scale,
                     outline="royalblue",
                     width=self.DEFAULT_RING_WIDTH,
-                    fill="white",
+                    fill=fill_colour,
                     tags=(f"ring_{index}", "sensor_ring"),
                 )
                 if inner > 0:
@@ -132,7 +178,7 @@ class SensorDesignCanvas(tk.Canvas):
                     y_px + half_width,
                     outline="royalblue",
                     width=2,
-                    fill="white",
+                    fill=fill_colour,
                     tags=(f"ring_{index}", "sensor_ring"),
                 )
 

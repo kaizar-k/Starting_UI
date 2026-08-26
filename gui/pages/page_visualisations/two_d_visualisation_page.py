@@ -38,6 +38,7 @@ class TwoDVisualisationPage(PageObject):
         self._trace_windows = {}
         self._layer_channel_map = {}
         self._layer_calibration_inputs = {}
+        self._layer_canvases = {}
         self._calibration_backend = CalibrationCurveBackend()
 
         self.refresh_selected_layers_display()
@@ -74,6 +75,7 @@ class TwoDVisualisationPage(PageObject):
         self._live_value_rows = []
         self._layer_channel_map = {}
         self._layer_calibration_inputs = {}
+        self._layer_canvases = {}
         PressureVisualisation.reset_runtime_state()
 
         config_page = self.master.pages[0]
@@ -131,7 +133,7 @@ class TwoDVisualisationPage(PageObject):
             layer_content_frame.pack(anchor="w", fill="x")
 
             dimensions, sensing_points = geometry
-            SensorDesignCanvas(
+            sensor_canvas = SensorDesignCanvas(
                 layer_content_frame,
                 dimensions,
                 sensing_points,
@@ -139,7 +141,9 @@ class TwoDVisualisationPage(PageObject):
                 layer_count=layer_count,
                 sensor_design_backend=sensor_design_backend,
                 open_trace_callback=self.open_trace_for_point,
-            ).pack(side="left", anchor="n")
+            )
+            sensor_canvas.pack(side="left", anchor="n")
+            self._layer_canvases[layer_number] = sensor_canvas
 
             # Vertical list of live pressures and resistances, one row per sensing point, next to the diagram.
             points_frame = ttk.Frame(layer_content_frame, padding=(15, 0))
@@ -198,6 +202,25 @@ class TwoDVisualisationPage(PageObject):
                 area=calibration_input["area"],
             )
             pressure_by_layer[layer_number] = layer_pressures.get(layer_number, [])
+
+        for layer_number, sensor_canvas in self._layer_canvases.items():
+            layer_pressures = pressure_by_layer.get(layer_number, [])
+            point_pressures_pa = [
+                None if pressure_value is None else pressure_value * GRAM_PER_MM2_TO_PA
+                for pressure_value in layer_pressures
+            ]
+
+            calibration_input = self._layer_calibration_inputs.get(layer_number, {})
+            fallback_max_pressure = float(calibration_input.get("calibration_data", {}).get("max_pressure", 0.0) or 0.0)
+            point_max_pressures_pa = []
+            for channel_number in self._layer_channel_map.get(layer_number, []):
+                point_state = PressureVisualisation._runtime_point_state.get(channel_number)
+                if point_state is not None:
+                    point_max_pressures_pa.append(float(point_state.get("max_pressure", fallback_max_pressure) or 0.0))
+                else:
+                    point_max_pressures_pa.append(fallback_max_pressure)
+
+            sensor_canvas.set_heatmap_values(point_pressures_pa, point_max_pressures_pa)
 
         for pressure_var, resistance_var, layer_number, point_index, _channel_number in self._live_value_rows:
             rows = rows_by_layer.get(layer_number, [])

@@ -104,6 +104,11 @@ class CalibrationCurveBackend:
             except ValueError:
                 area = 380.0
 
+        max_force = float(threshold_forces[1]) if len(threshold_forces) >= 2 else 0.0
+        max_pressure = 0.0
+        if area > 0:
+            max_pressure = (max_force / area) * 9806.65
+
         regimes_value = row.get("regimes")
         parsed_regimes = []
         if pd.notna(regimes_value) and str(regimes_value).strip():
@@ -128,6 +133,7 @@ class CalibrationCurveBackend:
             "regimes": parsed_regimes[:5],
             "regime_count": regime_count,
             "area": area,
+            "max_pressure": max_pressure,
         }
 
     # @staticmethod means this method doesn't receive self and doesn't touch any instance data,

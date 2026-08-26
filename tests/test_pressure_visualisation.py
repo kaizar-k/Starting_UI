@@ -110,3 +110,31 @@ def test_pressure_for_point_uses_runtime_regime_boundaries():
 
     assert pressure > 0
     assert pressure < 1.0
+
+
+def test_runtime_point_state_includes_configuration_max_pressure():
+    PressureVisualisation.reset_runtime_state()
+
+    regimes = [
+        {"lower_bound_g": 0.0, "coefficients": [1.0, 2.0]},
+        {"lower_bound_g": 5.0, "coefficients": [1.0, 3.0]},
+    ]
+    calibration_data = {
+        "threshold_forces": [0.0, 10.0],
+        "regimes": regimes,
+    }
+    expected_max_pressure = (10.0 / 380.0) * 9806.65
+
+    first_samples = [0.0, 100.0, 101.0, 99.0, 100.0, 100.0, 101.0, 99.0, 100.0, 100.0, 100.0, 130.0]
+    device = _FakeDevice([_FakeChannel([0]), _FakeChannel(first_samples)])
+
+    PressureVisualisation.get_pressure_for_all_points(
+        active_device=device,
+        channel_map={1: [1]},
+        calibration_data=calibration_data,
+        area=380.0,
+    )
+
+    point_state = PressureVisualisation._runtime_point_state[1]
+    assert "max_pressure" in point_state
+    assert math.isclose(point_state["max_pressure"], expected_max_pressure, rel_tol=1e-9, abs_tol=1e-9)
