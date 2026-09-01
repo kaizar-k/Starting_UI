@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from backend.calibration_curve_backend import CalibrationCurveBackend
+from gui.controls.colourbar import create_turbo_colorbar
 from gui.pages.objects.page_object import PageObject
 from visualisation_backend.pressure_visualisation import PressureVisualisation
 from visualisation_backend.three_d_visualisation import Sensor3DVisualisationCanvas
@@ -23,12 +24,19 @@ class ThreeDVisualisationPage(PageObject):
 
         self.canvas_frame = ttk.Frame(self.content_frame)
         self.canvas_frame.pack(side="left", fill="both", expand=True, anchor="n")
+
+        self.colorbar_frame = ttk.Frame(self.canvas_frame, padding=(0, 0, 10, 0))
+        self.colorbar_frame.pack(side="left", anchor="n")
+        _, self.colorbar_ax, self.colorbar_canvas = create_turbo_colorbar(self.colorbar_frame, width=0.7, height=3.2)
+        self.colorbar_canvas.get_tk_widget().pack(anchor="n")
+
         self.canvas_3d = Sensor3DVisualisationCanvas(self.canvas_frame)
-        self.canvas_3d.pack(fill="both", expand=True)
+        self.canvas_3d.pack(side="left", fill="both", expand=True)
 
         self.pressure_list_frame = ttk.Frame(self.content_frame, padding=(20, 0, 0, 0))
         self.pressure_list_frame.pack(side="left", anchor="n")
         self._pressure_value_rows = []
+        self.global_max_pressure_var = tk.StringVar(value="Global maximum pressure: -- Pa")
 
         # channel_number -> (layer_number, point_index), used to translate live pressure lookups.
         self._channel_to_layer_point = {}
@@ -49,6 +57,15 @@ class ThreeDVisualisationPage(PageObject):
         for widget in pressure_list_frame.winfo_children():
             widget.destroy()
         self._pressure_value_rows = []
+        self.global_max_pressure_var.set("Global maximum pressure: -- Pa")
+
+        ttk.Label(
+            self.pressure_list_frame,
+            textvariable=self.global_max_pressure_var,
+            width=32,
+            anchor="w",
+            font=("Segoe UI", 10, "bold"),
+        ).pack(anchor="w", pady=(0, 6))
 
     def _build_pressure_list(self, layer_geometries):
         """Create a vertical live pressure readout for every sensing point in the 3D plot."""
@@ -63,7 +80,7 @@ class ThreeDVisualisationPage(PageObject):
             _dimensions, sensing_points = layer_geometries[layer_number]
             for point_index, _point in enumerate(sensing_points, start=1):
                 pressure_var = tk.StringVar(value=f"Point {point_index} pressure: -- Pa")
-                ttk.Label(self.pressure_list_frame, textvariable=pressure_var).pack(anchor="w", padx=(10, 0))
+                ttk.Label(self.pressure_list_frame, textvariable=pressure_var, width=28, anchor="w").pack(anchor="w", padx=(10, 0))
                 self._pressure_value_rows.append((pressure_var, layer_number, point_index))
 
             ttk.Frame(self.pressure_list_frame, height=8).pack()
@@ -169,6 +186,13 @@ class ThreeDVisualisationPage(PageObject):
                     pressure_by_layer_point[key] = layer_pressures[point_index - 1] * GRAM_PER_MM2_TO_PA
 
         self.canvas_3d.set_heatmap_values(pressure_by_layer_point, max_pressure_by_layer_point)
+
+        global_max_pressure = max(max_pressure_by_layer_point.values(), default=0.0)
+        if global_max_pressure > 0:
+            self.global_max_pressure_var.set(f"Global maximum pressure: {global_max_pressure:.2f} Pa")
+        else:
+            self.global_max_pressure_var.set("Global maximum pressure: -- Pa")
+
         for pressure_var, layer_number, point_index in self._pressure_value_rows:
             pressure_value = pressure_by_layer_point.get((layer_number, point_index))
             pressure_text = "--" if pressure_value is None else f"{pressure_value:.2f}"

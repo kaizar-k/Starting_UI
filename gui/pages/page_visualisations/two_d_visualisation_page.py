@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from backend.calibration_curve_backend import CalibrationCurveBackend
+from gui.controls.colourbar import create_turbo_colorbar
 from gui.controls.sensor_design_canvas import SensorDesignCanvas
 from gui.pages.objects.page_object import PageObject
 from visualisation_backend.layer_text_backend import LayerTextBackend
@@ -39,6 +40,7 @@ class TwoDVisualisationPage(PageObject):
         self._layer_channel_map = {}
         self._layer_calibration_inputs = {}
         self._layer_canvases = {}
+        self._layer_colorbars = {}
         self._calibration_backend = CalibrationCurveBackend()
 
         self.refresh_selected_layers_display()
@@ -148,6 +150,10 @@ class TwoDVisualisationPage(PageObject):
             )
             sensor_canvas.pack(side="left", anchor="n")
             self._layer_canvases[layer_number] = sensor_canvas
+
+            _, colorbar_ax, colorbar_canvas = create_turbo_colorbar(layer_content_frame, width=0.7, height=2.5)
+            colorbar_canvas.get_tk_widget().pack(side="left", anchor="n", padx=(10, 0))
+            self._layer_colorbars[layer_number] = (colorbar_canvas, colorbar_ax)
 
             # Vertical list of live pressures and resistances, one row per sensing point, next to the diagram.
             points_frame = ttk.Frame(layer_content_frame, padding=(15, 0))
