@@ -26,13 +26,17 @@ class Sensor3DVisualisationCanvas(tk.Frame):
     MIN_MARKER_SIZE = 40.0
     MARKER_SIZE_PER_RADIUS = 18.0
 
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, azimuth=-60, elevation=15, **kwargs):
         super().__init__(master, **kwargs)
 
         self.figure = Figure(figsize=(6, 5), dpi=100)
         self.ax = self.figure.add_subplot(111, projection="3d")
+        self.view_azimuth = azimuth
+        self.view_elevation = elevation
         self.canvas = FigureCanvasTkAgg(self.figure, self)
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        self.ax.view_init(elev=self.view_elevation, azim=self.view_azimuth)
 
         # Draw order for every point, so live colour updates can be applied without rebuilding geometry.
         self._point_records = []
@@ -41,9 +45,19 @@ class Sensor3DVisualisationCanvas(tk.Frame):
         self._point_sizes = []
         self._draw_empty_state()
 
+    def set_view(self, azimuth=None, elevation=None):
+        """Set the camera angle for the 3D plot in degrees."""
+        if azimuth is not None:
+            self.view_azimuth = azimuth
+        if elevation is not None:
+            self.view_elevation = elevation
+        self.ax.view_init(elev=self.view_elevation, azim=self.view_azimuth)
+        self.canvas.draw_idle()
+
     def _draw_empty_state(self, message="No layers configured."):
         self.ax.clear()
         self.ax.text2D(0.5, 0.5, message, ha="center", va="center", transform=self.ax.transAxes)
+        self.ax.view_init(elev=self.view_elevation, azim=self.view_azimuth)
         self.canvas.draw_idle()
 
     def _draw_point_outline(self, x, y, z, outer, inner):
@@ -102,6 +116,7 @@ class Sensor3DVisualisationCanvas(tk.Frame):
         self.ax.set_xlabel("X (mm)")
         self.ax.set_ylabel("Y (mm)")
         self.ax.set_zlabel("Layer stack")
+        self.ax.view_init(elev=self.view_elevation, azim=self.view_azimuth)
         self.canvas.draw_idle()
 
     def set_heatmap_values(self, pressure_by_layer_point: dict, max_pressure_by_layer_point: dict):
