@@ -137,6 +137,7 @@ class DeviceObject(serial.Serial):
             self.write(bytes("stop\n", 'utf-8'))
             time.sleep(0.05)
             self.running = False
+            self.serial_clear()
 
         self.change_config_string(new_config_string)
         self.channel_collection = []
@@ -162,6 +163,8 @@ class DeviceObject(serial.Serial):
                 start_message += f', {self.__config_string}\n'
                 # The time delays are essential here.
                 time.sleep(2)
+                # Anything buffered while idle belongs to the previous run, not this one.
+                self.serial_clear()
                 self.write(bytes(start_message, 'utf-8'))
                 time.sleep(0.05)
 
@@ -184,13 +187,16 @@ class DeviceObject(serial.Serial):
             self.write(bytes(stop_message, 'utf-8'))
             time.sleep(0.05)
             print(f"Stopped device{self.index}")
+            # Safety State Variable changed accordingly.
+            self.running = False
+            # Samples sent between the stop command and the firmware halting are still
+            # queued in the driver, and would otherwise be read back during the next run.
+            self.serial_clear()
             # Offers the user the chance to save as a csv.
             self.save_as_csv()
             # After saving, channel data is cleared.
             for ch in self.channel_collection:
                 ch.clear_data()
-            # Safety State Variable changed accordingly.
-            self.running = False
 
         else:
             print("Device cannot be stopped unless serially connected and "
@@ -203,15 +209,19 @@ class DeviceObject(serial.Serial):
         # be changed through redefining:
         # DeviceObject.channel_collection[n].uom = 'Amps', for example.
         # Alternatively, the setup code below can be edited directly.
+        # A new run needs a fresh, fixed channel layout rather than appending
+        # duplicate channel objects from an earlier run.
+        # Start with empty channel histories. The device should not append a
+        # fake zero reading before any real serial samples arrive, otherwise the
+        # CSV export begins with an artificial startup row instead of the first
+        # actual measurement.
+        self.channel_collection = []
 
         time_channel = ChannelObject(index = 0,uom = "ms",form = int)
-        time_channel.add_val(0)
-
         self.channel_collection.append(time_channel)
 
         for i in range(1,self.num_channels+1):
             new_channel = ChannelObject(index = i,uom = "Ohms", form = float)
-            new_channel.add_val(0.0)
             self.channel_collection.append(new_channel)
         pass
 

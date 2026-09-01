@@ -16,7 +16,7 @@ GRAM_PER_MM2_TO_PA = 9806.65
 
 class TwoDVisualisationPage(PageObject):
     """Shows the sensor design diagram for each layer selected in the Options 1 popup."""
-
+    
     def __init__(self, master, title_text, page_index, pop_up_index):
         super().__init__(master, title_text, page_index, pop_up_index)
 
@@ -65,9 +65,14 @@ class TwoDVisualisationPage(PageObject):
             layer_number=layer_number,
             point_index=point_index,
             channel_number=channel_number,
-            active_device=self.master.active_device,
+            device_provider=lambda: self.master.active_device,
         )
         self._trace_windows[key] = popup.window
+
+    def close_trace_windows(self):
+        """Drop every open trace window so a new run cannot show the previous run's curve."""
+        TracePopup.close_all()
+        self._trace_windows = {}
 
     def refresh_selected_layers_display(self):
         for widget in self.diagrams_frame.winfo_children():
@@ -76,7 +81,6 @@ class TwoDVisualisationPage(PageObject):
         self._layer_channel_map = {}
         self._layer_calibration_inputs = {}
         self._layer_canvases = {}
-        PressureVisualisation.reset_runtime_state()
 
         config_page = self.master.pages[0]
         selected_layers = config_page.config_values.get("options_1_selected_layers", [])
@@ -160,6 +164,9 @@ class TwoDVisualisationPage(PageObject):
             ttk.Label(heading_frame, text="Resistance (Ω)", font=("Segoe UI", 10, "bold"), width=18).grid(
                 row=0, column=2, sticky="w"
             )
+            ttk.Label(heading_frame, text="Max pressure (Pa)", font=("Segoe UI", 10, "bold"), width=18).grid(
+                row=0, column=3, sticky="w"
+            )
 
             rows = layer_text_backend.build_layer_point_rows(layer_number, layer_count, self.master.active_device)
             for point_index, channel_number, _label_text in rows:
@@ -170,9 +177,13 @@ class TwoDVisualisationPage(PageObject):
 
                 pressure_var = tk.StringVar(value="--")
                 resistance_var = tk.StringVar(value="--")
+                max_pressure_var = tk.StringVar(value="--")
                 ttk.Label(row_frame, textvariable=pressure_var, width=18).grid(row=0, column=1, sticky="w", padx=(0, 10))
-                ttk.Label(row_frame, textvariable=resistance_var, width=18).grid(row=0, column=2, sticky="w")
-                self._live_value_rows.append((pressure_var, resistance_var, layer_number, point_index, channel_number))
+                ttk.Label(row_frame, textvariable=resistance_var, width=18).grid(row=0, column=2, sticky="w", padx=(0, 10))
+                ttk.Label(row_frame, textvariable=max_pressure_var, width=18).grid(row=0, column=3, sticky="w")
+                self._live_value_rows.append(
+                    (pressure_var, resistance_var, max_pressure_var, layer_number, point_index, channel_number)
+                )
 
         self._layer_text_backend = layer_text_backend
         self._layer_count = layer_count
@@ -180,7 +191,7 @@ class TwoDVisualisationPage(PageObject):
     def _update_live_values(self):
         active_device = self.master.active_device
         rows_by_layer = {}
-        for _pressure_var, _resistance_var, layer_number, _point_index, _channel_number in self._live_value_rows:
+        for _pressure_var, _resistance_var, _max_pressure_var, layer_number, _point_index, _channel_number in self._live_value_rows:
             if layer_number not in rows_by_layer:
                 rows_by_layer[layer_number] = self._layer_text_backend.build_layer_point_rows(
                     layer_number,
@@ -222,7 +233,7 @@ class TwoDVisualisationPage(PageObject):
 
             sensor_canvas.set_heatmap_values(point_pressures_pa, point_max_pressures_pa)
 
-        for pressure_var, resistance_var, layer_number, point_index, _channel_number in self._live_value_rows:
+        for pressure_var, resistance_var, max_pressure_var, layer_number, point_index, channel_number in self._live_value_rows:
             rows = rows_by_layer.get(layer_number, [])
             if point_index - 1 >= len(rows):
                 continue
@@ -238,5 +249,11 @@ class TwoDVisualisationPage(PageObject):
 
             pressure_var.set(pressure_text)
             resistance_var.set(resistance_text)
+
+            calibration_input = self._layer_calibration_inputs.get(layer_number, {})
+            fallback_max_pressure = float(calibration_input.get("calibration_data", {}).get("max_pressure", 0.0) or 0.0)
+            point_state = PressureVisualisation._runtime_point_state.get(channel_number)
+            max_pressure = float(point_state.get("max_pressure", fallback_max_pressure) if point_state else fallback_max_pressure)
+            max_pressure_var.set(f"{max_pressure:.2f}" if max_pressure > 0 else "--")
 
         self.after(LIVE_VALUE_REFRESH_MS, self._update_live_values)

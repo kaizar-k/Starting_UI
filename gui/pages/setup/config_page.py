@@ -37,6 +37,8 @@ class ConfigPage(PageObject):
             "show_3d_plot": False,
             # Sensor type selected for each layer, in layer order.
             "layer_sensor_types": [],
+            # Shared physical area for the force gauge applicator, in square millimetres.
+            "force_gauge_applicator_area": "836",
         }
 
         self.dropdown_data = DropdownData()
@@ -233,7 +235,11 @@ class ConfigPage(PageObject):
         for widget in self.layer_feature_frame.winfo_children():
             widget.destroy()
 
+        # The destroyed controls must not remain in these collections when the
+        # layer count decreases, or later state updates target invalid Tk widgets.
+        self.layer_config_name_dropdowns.clear()
         self.layer_feature_dropdowns.clear()
+        self.layer_sensor_type_dropdowns.clear()
         self.layer_status_labels.clear()
 
         try:

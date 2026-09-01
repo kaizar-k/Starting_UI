@@ -32,3 +32,23 @@ def test_receive_serial_ignores_short_partial_payloads():
     result = device.receive_serial()
 
     assert result is None
+
+
+def test_set_up_channels_replaces_channels_from_previous_run():
+    device = DeviceObject(0, "test", config_string="NC:2, SP:10")
+
+    device.set_up_channels()
+    first_channel_collection = device.channel_collection
+    device.set_up_channels()
+
+    assert len(device.channel_collection) == 3
+    assert device.channel_collection is not first_channel_collection
+    assert [channel.index for channel in device.channel_collection] == [0, 1, 2]
+
+
+def test_set_up_channels_starts_empty_until_real_data_arrives():
+    device = DeviceObject(0, "test", config_string="NC:2, SP:10")
+
+    device.set_up_channels()
+
+    assert [channel.return_raw_data() for channel in device.channel_collection] == [[], [], []]

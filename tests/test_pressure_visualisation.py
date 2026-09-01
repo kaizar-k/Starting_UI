@@ -61,32 +61,36 @@ def test_pressure_for_all_points_uses_startup_baseline_cache():
         "regimes": regimes,
     }
 
-    # Time channel index 0 is unused here; sensor channel 1 includes a seeded 0.0 then startup samples.
+    # Index 0 is the time channel and physical channel 1 is reserved.
     first_samples = [0.0, 100.0, 101.0, 99.0, 100.0, 100.0, 101.0, 99.0, 100.0, 100.0, 100.0, 130.0]
-    device = _FakeDevice([_FakeChannel([0]), _FakeChannel(first_samples)])
+    device = _FakeDevice([
+        _FakeChannel([0]),
+        _FakeChannel([999.0]),
+        _FakeChannel(first_samples),
+    ])
 
     pressure_by_point = PressureVisualisation.get_pressure_for_all_points(
         active_device=device,
-        channel_map={1: [1]},
+        channel_map={1: [2]},
         calibration_data=calibration_data,
         area=380.0,
     )
 
     assert pressure_by_point[1][0] is not None
 
-    point_state = PressureVisualisation._runtime_point_state[1]
+    point_state = PressureVisualisation._runtime_point_state[2]
     assert math.isclose(point_state["baseline_resistance"], 100.0, rel_tol=1e-9, abs_tol=1e-9)
 
     # Baseline must stay fixed once initialised, even if later samples drift.
     baseline_before = point_state["baseline_resistance"]
-    device.channel_collection[1] = _FakeChannel(first_samples + [180.0, 190.0, 200.0])
+    device.channel_collection[2] = _FakeChannel(first_samples + [180.0, 190.0, 200.0])
     PressureVisualisation.get_pressure_for_all_points(
         active_device=device,
-        channel_map={1: [1]},
+        channel_map={1: [2]},
         calibration_data=calibration_data,
         area=380.0,
     )
-    baseline_after = PressureVisualisation._runtime_point_state[1]["baseline_resistance"]
+    baseline_after = PressureVisualisation._runtime_point_state[2]["baseline_resistance"]
     assert math.isclose(baseline_before, baseline_after, rel_tol=1e-9, abs_tol=1e-9)
 
 

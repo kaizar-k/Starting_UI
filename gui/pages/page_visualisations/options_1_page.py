@@ -66,3 +66,8 @@ class Options1Page(PopUpObject):
         for page in self.master.pages:
             if hasattr(page, "refresh_selected_layers_display"):
                 page.refresh_selected_layers_display()
+
+    def clear_selected_layers(self):
+        """Clear saved layer visibility and rebuild the popup with every layer unchecked."""
+        self.config_page.config_values["options_1_selected_layers"] = []
+        self._refresh_layer_checkboxes()

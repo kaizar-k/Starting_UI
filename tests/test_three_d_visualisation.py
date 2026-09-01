@@ -70,6 +70,23 @@ def test_heatmap_uses_shared_global_max_and_turbo_endpoints():
         root.destroy()
 
 
+def test_heatmap_uses_white_for_unavailable_pressure():
+    root = _create_tk_root_or_skip()
+    try:
+        canvas = _build_canvas(root)
+
+        canvas.set_heatmap_values(
+            pressure_by_layer_point={(1, 1): None, (2, 1): 100.0},
+            max_pressure_by_layer_point={(1, 1): 100.0, (2, 1): 100.0},
+        )
+        canvas.canvas.draw()
+        colours = {tuple(colour) for colour in canvas._scatter.get_facecolor()}
+
+        assert (1.0, 1.0, 1.0, 1.0) in colours
+    finally:
+        root.destroy()
+
+
 def test_show_outlines_toggle_adds_line_artists():
     root = _create_tk_root_or_skip()
     try:

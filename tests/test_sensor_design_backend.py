@@ -94,7 +94,7 @@ def _add_design_with_point_count(backend, name, point_count):
 
 
 def test_build_channel_map_matches_worked_example(tmp_path):
-    # Layer 1 has 3 sensing points, layer 2 has 1, so channels run 1-3 then 4.
+    # Channel 1 is reserved, so four points run across channels 2-5.
     backend = SensorDesignBackend(str(tmp_path / "design_data.csv"))
     _add_design_with_point_count(backend, "3-point design", 3)
     _add_design_with_point_count(backend, "1-point design", 1)
@@ -103,13 +103,14 @@ def test_build_channel_map_matches_worked_example(tmp_path):
 
     channel_map = backend.build_channel_map(2)
 
-    assert channel_map == {1: [1, 2, 3], 2: [4]}
+    assert channel_map == {1: [2, 3, 4], 2: [5]}
     assert backend.get_total_channel_count(2) == 4
+    assert backend.get_required_device_channel_count(2) == 5
 
 
 def test_build_channel_map_skips_unconfigured_layers_without_gaps(tmp_path):
     # Layer 2 has no sensor design selected, so it contributes zero channels
-    # and layer 3's channels immediately follow layer 1's.
+    # and layer 3's channels immediately follow layer 1's after channel 1.
     backend = SensorDesignBackend(str(tmp_path / "design_data.csv"))
     _add_design_with_point_count(backend, "2-point design", 2)
     backend.set_layer_sensor_type(1, "2-point design")
@@ -117,8 +118,9 @@ def test_build_channel_map_skips_unconfigured_layers_without_gaps(tmp_path):
 
     channel_map = backend.build_channel_map(3)
 
-    assert channel_map == {1: [1, 2], 2: [], 3: [3, 4]}
+    assert channel_map == {1: [2, 3], 2: [], 3: [4, 5]}
     assert backend.get_total_channel_count(3) == 4
+    assert backend.get_required_device_channel_count(3) == 5
 
 
 def test_build_channel_map_all_layers_unconfigured(tmp_path):
@@ -128,3 +130,4 @@ def test_build_channel_map_all_layers_unconfigured(tmp_path):
 
     assert channel_map == {1: [], 2: []}
     assert backend.get_total_channel_count(2) == 0
+    assert backend.get_required_device_channel_count(2) == 0

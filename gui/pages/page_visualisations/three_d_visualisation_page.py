@@ -18,11 +18,17 @@ class ThreeDVisualisationPage(PageObject):
     def __init__(self, master, title_text, page_index, pop_up_index):
         super().__init__(master, title_text, page_index, pop_up_index)
 
-        self.canvas_frame = ttk.Frame(self.main_area_frame, padding=20)
-        self.canvas_frame.pack(fill="both", expand=True, anchor="w")
+        self.content_frame = ttk.Frame(self.main_area_frame, padding=20)
+        self.content_frame.pack(fill="both", expand=True, anchor="w")
 
+        self.canvas_frame = ttk.Frame(self.content_frame)
+        self.canvas_frame.pack(side="left", fill="both", expand=True, anchor="n")
         self.canvas_3d = Sensor3DVisualisationCanvas(self.canvas_frame)
         self.canvas_3d.pack(fill="both", expand=True)
+
+        self.pressure_list_frame = ttk.Frame(self.content_frame, padding=(20, 0, 0, 0))
+        self.pressure_list_frame.pack(side="left", anchor="n")
+        self._pressure_value_rows = []
 
         # channel_number -> (layer_number, point_index), used to translate live pressure lookups.
         self._channel_to_layer_point = {}
@@ -32,6 +38,35 @@ class ThreeDVisualisationPage(PageObject):
         self._live_update_job = None
 
         self.refresh_from_config()
+
+    def _clear_pressure_list(self):
+        """Remove pressure rows when the plotted layer set changes or the plot is hidden."""
+        pressure_list_frame = getattr(self, "pressure_list_frame", None)
+        if pressure_list_frame is None:
+            self._pressure_value_rows = []
+            return
+
+        for widget in pressure_list_frame.winfo_children():
+            widget.destroy()
+        self._pressure_value_rows = []
+
+    def _build_pressure_list(self, layer_geometries):
+        """Create a vertical live pressure readout for every sensing point in the 3D plot."""
+        self._clear_pressure_list()
+        for layer_number in sorted(layer_geometries):
+            ttk.Label(
+                self.pressure_list_frame,
+                text=f"Layer {layer_number}",
+                font=("Segoe UI", 10, "bold"),
+            ).pack(anchor="w", pady=(0, 3))
+
+            _dimensions, sensing_points = layer_geometries[layer_number]
+            for point_index, _point in enumerate(sensing_points, start=1):
+                pressure_var = tk.StringVar(value=f"Point {point_index} pressure: -- Pa")
+                ttk.Label(self.pressure_list_frame, textvariable=pressure_var).pack(anchor="w", padx=(10, 0))
+                self._pressure_value_rows.append((pressure_var, layer_number, point_index))
+
+            ttk.Frame(self.pressure_list_frame, height=8).pack()
 
     def _schedule_live_updates(self):
         """Queue the next 3D redraw only while the plot is enabled and visible."""
@@ -52,10 +87,9 @@ class ThreeDVisualisationPage(PageObject):
             if self._live_update_job is not None:
                 self.after_cancel(self._live_update_job)
                 self._live_update_job = None
+            self._clear_pressure_list()
             self.canvas_3d._draw_empty_state("No plot selected.")
             return
-
-        PressureVisualisation.reset_runtime_state()
 
         try:
             layer_count = int(config_page.config_values.get("number_of_layers", "1"))
@@ -95,6 +129,7 @@ class ThreeDVisualisationPage(PageObject):
         self._layer_channel_map = layer_channel_map
         # Sensor design outlines are always shown in the 3D view.
         self.canvas_3d.rebuild_structure(layer_geometries, True)
+        self._build_pressure_list(layer_geometries)
         self._schedule_live_updates()
 
     def _update_live_values(self):
@@ -134,4 +169,9 @@ class ThreeDVisualisationPage(PageObject):
                     pressure_by_layer_point[key] = layer_pressures[point_index - 1] * GRAM_PER_MM2_TO_PA
 
         self.canvas_3d.set_heatmap_values(pressure_by_layer_point, max_pressure_by_layer_point)
+        for pressure_var, layer_number, point_index in self._pressure_value_rows:
+            pressure_value = pressure_by_layer_point.get((layer_number, point_index))
+            pressure_text = "--" if pressure_value is None else f"{pressure_value:.2f}"
+            pressure_var.set(f"Point {point_index} pressure: {pressure_text} Pa")
+
         self._schedule_live_updates()

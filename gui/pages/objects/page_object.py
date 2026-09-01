@@ -1,4 +1,5 @@
 import tkinter as tk
+import math
 from tkinter import ttk
 from tkinter import font as tkFont
 
@@ -71,10 +72,24 @@ class PageObject(tk.Frame):
         )
         self.pop_up_button.pack(side='left', fill='y', expand=False, padx=(8, 8))
 
+        self.force_reading_var = tk.StringVar(value="")
+        self.force_reading_label = tk.Label(
+            self.title_frame,
+            textvariable=self.force_reading_var,
+            bg=LOGO_COLOUR,
+            fg=TEXT_COLOUR,
+            font=HEADER_FONT,
+            width=60,
+            anchor="w",
+        )
+        # Keep this slot present even when stopped so force text length cannot shift the page title.
+        self.force_reading_label.pack(side='left', fill='y', padx=(8, 8))
+
         # pack title of page into title_frame
         self.title = Label(self.title_frame, text=self.title_text)
-        self.title.pack(side='left', fill='both', expand=True, anchor='w', padx=(8, 0))
-        self.title.configure(font=TITLE_FONT)
+        self.title.pack(side='left', fill='both', expand=True, anchor='w', padx=(0, 0))
+        self.title.configure(font=TITLE_FONT, anchor='w')
+        self.after(100, self._update_force_reading)
 
     def refresh_from_config(self):
         """Hook for pages that need to update when the config page changes."""
@@ -100,3 +115,31 @@ class PageObject(tk.Frame):
         self.main_canvas.itemconfigure('main_area_window', width=canvas_width)
         self.main_canvas.itemconfigure('main_area_window', height=content_height)
         self.main_canvas.configure(scrollregion=(0, 0, content_width, content_height))
+
+    def _update_force_reading(self):
+        """Show live force and derived applicator pressure from physical channel 1 while running."""
+        device = getattr(self.master, "active_device", None)
+        if device is None or not device.running or len(device.channel_collection) <= 1:
+            self.force_reading_var.set("")
+        else:
+            samples = device.channel_collection[1].return_raw_data()
+            if samples:
+                try:
+                    force_grams = float(samples[-1])
+                    applicator_area = float(
+                        self.master.pages[0].config_values.get("force_gauge_applicator_area", "0")
+                    )
+                    if not math.isfinite(applicator_area) or applicator_area <= 0:
+                        raise ValueError
+
+                    # Convert grams-force per square millimetre to Pascals for the header readout.
+                    pressure_pa = (force_grams / applicator_area) * 9806.65
+                    self.force_reading_var.set(
+                        f"Force: {force_grams:.2f} g    Pressure: {pressure_pa:.2f} Pa"
+                    )
+                except (TypeError, ValueError):
+                    self.force_reading_var.set("Force: -- g    Pressure: -- Pa")
+            else:
+                self.force_reading_var.set("Force: -- g    Pressure: -- Pa")
+
+        self.after(100, self._update_force_reading)

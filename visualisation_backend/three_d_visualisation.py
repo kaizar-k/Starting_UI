@@ -119,7 +119,10 @@ class Sensor3DVisualisationCanvas(tk.Frame):
         for record in self._point_records:
             key = self._point_key(record)
             pressure = pressure_by_layer_point.get(key)
-            if pressure is None or global_max_pressure <= 0:
+            if pressure is None:
+                colours.append((1.0, 1.0, 1.0, 1.0))
+                continue
+            if global_max_pressure <= 0:
                 progress = 0.0
             else:
                 progress = max(0.0, min(1.0, float(pressure) / global_max_pressure))

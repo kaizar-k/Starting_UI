@@ -121,6 +121,24 @@ def test_sensor_design_canvas_heatmap_scales_between_zero_and_max_pressure():
         root.destroy()
 
 
+def test_sensor_design_canvas_uses_white_for_unavailable_pressure():
+    root = _create_tk_root_or_skip()
+    try:
+        canvas = SensorDesignCanvas(
+            root,
+            dimensions=(10, 10),
+            sensing_points=[{"x": 5, "y": 5, "radius_outer": 4, "radius_inner": 2}],
+            width=200,
+            height=200,
+        )
+
+        canvas.set_heatmap_values([None], [1000.0])
+
+        assert canvas.itemcget("ring_1", "fill") == "white"
+    finally:
+        root.destroy()
+
+
 def test_get_live_trace_series_returns_time_and_channel_data():
     class FakeChannel:
         def __init__(self, values):

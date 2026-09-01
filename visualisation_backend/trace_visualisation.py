@@ -33,12 +33,15 @@ class TracePopup:
 
     _windows = {}
 
-    def __init__(self, master, layer_number, point_index, channel_number, active_device, refresh_ms=250):
+    def __init__(self, master, layer_number, point_index, channel_number, active_device=None,
+                 device_provider=None, refresh_ms=250):
         self.master = master
         self.layer_number = layer_number
         self.point_index = point_index
         self.channel_number = channel_number
         self.active_device = active_device
+        # Resolved per refresh so a reconnect or restart never leaves the plot bound to a dead device.
+        self.device_provider = device_provider
         self.refresh_ms = refresh_ms
 
         self.window_key = (layer_number, point_index)
@@ -69,12 +72,17 @@ class TracePopup:
 
         self._refresh_plot()
 
+    def _resolve_device(self):
+        if self.device_provider is not None:
+            return self.device_provider()
+        return self.active_device
+
     def _refresh_plot(self):
         if not self.window.winfo_exists():
             return
 
         try:
-            time_values, resistance_values = get_live_trace_series(self.active_device, self.channel_number)
+            time_values, resistance_values = get_live_trace_series(self._resolve_device(), self.channel_number)
         except (AttributeError, IndexError, TypeError):
             time_values, resistance_values = [], []
 
@@ -106,3 +114,11 @@ class TracePopup:
         if self.window.winfo_exists():
             self.window.destroy()
         self._windows.pop(self.window_key, None)
+
+    @classmethod
+    def close_all(cls):
+        """Destroy every open trace window so a finished run leaves no stale plot behind."""
+        for window in list(cls._windows.values()):
+            if window.winfo_exists():
+                window.destroy()
+        cls._windows.clear()

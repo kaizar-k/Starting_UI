@@ -61,12 +61,12 @@ class SensorDesignBackend:
     def build_channel_map(self, layer_count: int) -> dict:
         """Map each layer to its serial channel numbers, in sensing-point order.
 
-        Channels are numbered sequentially (1-based) across layers 1..layer_count.
-        A layer without a usable sensor design contributes no channels, so the
-        device is never asked to read from a redundant/unused channel.
+        Physical channel 1 is reserved, so sensing points are numbered
+        sequentially from channel 2 across layers 1..layer_count. A layer
+        without a usable sensor design contributes no sensing-point channels.
         """
         channel_map = {}
-        next_channel = 1
+        next_channel = 2
         for layer_number in range(1, layer_count + 1):
             design_name = self.get_layer_sensor_type(layer_number)
             geometry = self.get_design_geometry(design_name) if design_name else None
@@ -83,9 +83,14 @@ class SensorDesignBackend:
         return channel_map
 
     def get_total_channel_count(self, layer_count: int) -> int:
-        """Return the total number of channels needed to cover every layer's sensing points."""
+        """Return the total number of configured sensing points."""
         channel_map = self.build_channel_map(layer_count)
         return sum(len(channels) for channels in channel_map.values())
+
+    def get_required_device_channel_count(self, layer_count: int) -> int:
+        """Return the physical channel count, including reserved channel 1 when points exist."""
+        sensing_point_count = self.get_total_channel_count(layer_count)
+        return sensing_point_count + 1 if sensing_point_count else 0
 
     def _read_design_data_df(self) -> pd.DataFrame:
         # Return an empty frame with the expected columns when the CSV doesn't exist yet.

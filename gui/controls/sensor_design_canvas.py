@@ -64,15 +64,14 @@ class SensorDesignCanvas(tk.Canvas):
         if point_index - 1 >= len(self.point_max_pressures_pa):
             return "white"
 
+        if point_index - 1 >= len(self.point_pressures_pa) or self.point_pressures_pa[point_index - 1] is None:
+            return "white"
+
         max_pressure_pa = float(self.point_max_pressures_pa[point_index - 1] or 0.0)
         if max_pressure_pa <= 0:
             return "white"
 
-        point_pressure_pa = 0.0
-        if point_index - 1 < len(self.point_pressures_pa):
-            value = self.point_pressures_pa[point_index - 1]
-            if value is not None:
-                point_pressure_pa = max(0.0, float(value))
+        point_pressure_pa = max(0.0, float(self.point_pressures_pa[point_index - 1]))
 
         # Scale each region independently from 0 Pa to that point's configured max pressure.
         progress = point_pressure_pa / max_pressure_pa

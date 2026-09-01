@@ -16,6 +16,7 @@ class Options2Page(PopUpObject):
         self.options_frame.pack(fill="both", expand=True, anchor="w")
 
         self.show_3d_var = tk.BooleanVar(value=self.config_page.config_values.get("show_3d_plot", False))
+        self._syncing_show_3d_plot = False
         self.show_3d_var.trace_add("write", self._save_show_3d_plot)
 
         self.show_3d_checkbox = Checkbutton(
@@ -27,6 +28,9 @@ class Options2Page(PopUpObject):
 
     def _save_show_3d_plot(self, *args):
         """Persist the 3D visibility selection and refresh dependent pages."""
+        if self._syncing_show_3d_plot:
+            return
+
         self.config_page.config_values["show_3d_plot"] = bool(self.show_3d_var.get())
 
         # Only notify other pages; refreshing the config page itself would rebuild
@@ -37,4 +41,11 @@ class Options2Page(PopUpObject):
 
     def refresh_from_config(self):
         """Keep the checkbox in sync when shared config values change."""
+        self._syncing_show_3d_plot = True
         self.show_3d_var.set(bool(self.config_page.config_values.get("show_3d_plot", False)))
+        self._syncing_show_3d_plot = False
+
+    def clear_show_3d_plot(self):
+        """Clear the saved 3D visibility option and uncheck the popup control."""
+        self.config_page.config_values["show_3d_plot"] = False
+        self.refresh_from_config()
