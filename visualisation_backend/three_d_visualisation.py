@@ -26,7 +26,7 @@ class Sensor3DVisualisationCanvas(tk.Frame):
     MIN_MARKER_SIZE = 40.0
     MARKER_SIZE_PER_RADIUS = 18.0
 
-    def __init__(self, master, azimuth=-60, elevation=15, **kwargs):
+    def __init__(self, master, azimuth=-45, elevation=15, **kwargs):
         super().__init__(master, **kwargs)
 
         self.figure = Figure(figsize=(6, 5), dpi=100)
@@ -41,6 +41,7 @@ class Sensor3DVisualisationCanvas(tk.Frame):
         # Draw order for every point, so live colour updates can be applied without rebuilding geometry.
         self._point_records = []
         self._scatter = None
+        self._outline_lookup = {}
         self._point_positions = ([], [], [])
         self._point_sizes = []
         self._draw_empty_state()
@@ -60,24 +61,30 @@ class Sensor3DVisualisationCanvas(tk.Frame):
         self.ax.view_init(elev=self.view_elevation, azim=self.view_azimuth)
         self.canvas.draw_idle()
 
-    def _draw_point_outline(self, x, y, z, outer, inner):
+    def _draw_point_outline(self, x, y, z, outer, inner, colour="royalblue"):
         # Approximates each ring/corner as a flat polygon at the layer's z-plane.
+        lines = []
         angles = np.linspace(0, 2 * np.pi, self.OUTLINE_SEGMENTS)
         if outer > 0:
-            self.ax.plot(x + outer * np.cos(angles), y + outer * np.sin(angles), z, color="royalblue", linewidth=1)
+            line_outer = self.ax.plot(x + outer * np.cos(angles), y + outer * np.sin(angles), z, color=colour, linewidth=1)[0]
+            lines.append(line_outer)
             if inner > 0:
-                self.ax.plot(x + inner * np.cos(angles), y + inner * np.sin(angles), z, color="royalblue", linewidth=1)
+                line_inner = self.ax.plot(x + inner * np.cos(angles), y + inner * np.sin(angles), z, color=colour, linewidth=1)[0]
+                lines.append(line_inner)
         else:
             half = self.CORNER_HALF_WIDTH
             square_x = [x - half, x + half, x + half, x - half, x - half]
             square_y = [y - half, y - half, y + half, y + half, y - half]
-            self.ax.plot(square_x, square_y, z, color="royalblue", linewidth=1)
+            line_square = self.ax.plot(square_x, square_y, z, color=colour, linewidth=1)[0]
+            lines.append(line_square)
+        return lines
 
     def rebuild_structure(self, layer_geometries: dict, show_outlines: bool):
         """Rebuild the static geometry (positions, sizes, outlines) for the current layer set."""
         self.ax.clear()
         self._point_records = []
         self._scatter = None
+        self._outline_lookup = {}
         self._point_positions = ([], [], [])
         self._point_sizes = []
 
@@ -104,7 +111,10 @@ class Sensor3DVisualisationCanvas(tk.Frame):
                 self._point_records.append({"layer_number": layer_number, "point_index": point_index})
 
                 if show_outlines:
-                    self._draw_point_outline(x, y, z, outer, inner)
+                    outline_lines = self._draw_point_outline(x, y, z, outer, inner, colour="royalblue")
+                    self._outline_lookup[(layer_number, point_index)] = outline_lines
+                else:
+                    self._outline_lookup[(layer_number, point_index)] = []
 
         # Cached so colour updates can recreate the scatter without recomputing layout each tick.
         self._point_positions = (xs, ys, zs)
@@ -150,6 +160,23 @@ class Sensor3DVisualisationCanvas(tk.Frame):
         self._scatter = self.ax.scatter(
             xs, ys, zs, s=self._point_sizes, c=colours, edgecolors="royalblue", depthshade=False
         )
+
+        for record, colour in zip(self._point_records, colours):
+            key = self._point_key(record)
+            pressure = pressure_by_layer_point.get(key)
+            if pressure is None:
+                continue
+            if global_max_pressure <= 0:
+                ring_colour = "royalblue"
+            else:
+                progress = max(0.0, min(1.0, float(pressure) / global_max_pressure))
+                ring_colour = cmap(progress)
+
+            outline_lines = self._outline_lookup.get((record["layer_number"], record["point_index"]), [])
+            for line in outline_lines:
+                if line is not None:
+                    line.set_color(ring_colour)
+
         self.canvas.draw_idle()
 
     @staticmethod
