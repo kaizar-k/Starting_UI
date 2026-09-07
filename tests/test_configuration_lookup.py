@@ -1,6 +1,20 @@
+import tkinter as tk
+
 import pandas as pd
 
+root = tk.Tk()
+root.withdraw()
+
+from gui.pages.setup.config_page import parse_positive_float
 from backend.dropdown_backend import DropdownData
+
+
+def test_parse_positive_float_rejects_non_positive_values():
+    assert parse_positive_float("3.5") == 3.5
+    assert parse_positive_float("0") is None
+    assert parse_positive_float("-1") is None
+    assert parse_positive_float("") is None
+    assert parse_positive_float("abc") is None
 
 
 def test_get_configuration_values_by_name_returns_matching_row(tmp_path):

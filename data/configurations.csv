@@ -1,4 +1,5 @@
-configuration_name,AC/DC,Sensor Type,Substrate,Graphene,Coating,threshold_forces,regimes,area
-S27,DC,Loop,PET,GR113B,CAD,"[0.0, 200.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [1.78899894382111e-05, -0.000610370201701016, 1.00052528577642]}, {""lower_bound_g"": 25.0, ""coefficients"": [5.24354893550685e-09, 6.79958975308748e-05, 0.992959124411341]}]",380.0
-S30,DC,Loop,C81,GR116,C81,"[0.0, 200.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [-0.01068, 1.0]}, {""lower_bound_g"": 31.664142424381648, ""coefficients"": [2.30447346633834e-06, -0.000846301392001837, 0.686313860334823]}]",380.0
-S42,AC,Loop,PET,GR116 C,C81,"[0.0, 1000.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [2.33e-09, 1.112e-05, 1.0]}]",380.0
+configuration_name,AC/DC,Sensor Type,Substrate,Graphene,Coating,threshold_forces,regimes,area,calibration_regimes
+S27,DC,Loop,PET,GR113B,CAD,"[0.0, 200.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [1.78899894382111e-05, -0.000610370201701016, 1.00052528577642]}, {""lower_bound_g"": 25.0, ""coefficients"": [5.24354893550685e-09, 6.79958975308748e-05, 0.992959124411341]}]",380.0,
+S30,DC,Loop,C81,GR116,C81,"[0.0, 200.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [-0.01068, 1.0]}, {""lower_bound_g"": 31.664142424381648, ""coefficients"": [2.30447346633834e-06, -0.000846301392001837, 0.686313860334823]}]",380.0,
+S42,AC,Loop,PET,GR116 C,C81,"[0.0, 1000.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [2.33e-09, 1.112e-05, 1.0]}]",380.0,
+S54,DC,4-Loop,C81,GR109(M10),C81,"[0.0, 200.0]","[{""lower_bound_g"": 0.0, ""coefficients"": [0.001958, -0.007059, 1.0]}, {""lower_bound_g"": 5.526410371253597, ""coefficients"": [-4.477e-07, 0.0001452, 1.02]}]",380.0,

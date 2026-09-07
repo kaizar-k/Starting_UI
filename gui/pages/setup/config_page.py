@@ -7,6 +7,27 @@ from gui.controls.dropdown_object import DropdownObject
 from gui.pages.objects.page_object import PageObject
 
 
+def parse_positive_float(value):
+    """Return a positive float, or None when the value is blank, zero, negative, or non-numeric."""
+    if value is None:
+        return None
+
+    if isinstance(value, (int, float)):
+        parsed_value = float(value)
+        return parsed_value if parsed_value > 0 else None
+
+    text = str(value).strip()
+    if not text:
+        return None
+
+    try:
+        parsed_value = float(text)
+    except ValueError:
+        return None
+
+    return parsed_value if parsed_value > 0 else None
+
+
 def build_layer_feature_definitions(category_names, category_options):
     """Build the layer feature definitions from the current CSV-backed categories and options."""
     layer_feature_definitions = []
@@ -37,6 +58,8 @@ class ConfigPage(PageObject):
             "show_3d_plot": False,
             # Sensor type selected for each layer, in layer order.
             "layer_sensor_types": [],
+            # Per-layer positive max dR_rel/dt thresholds, indexed by layer number.
+            "layer_max_drdt": {},
             # Shared physical area for the force gauge applicator, in square millimetres.
             "force_gauge_applicator_area": "836",
         }
@@ -54,7 +77,10 @@ class ConfigPage(PageObject):
         self.layer_feature_dropdowns = {}
         self.layer_config_name_dropdowns = {}
         self.layer_sensor_type_dropdowns = {}
+        self.layer_max_drdt_entries = {}
+        self.layer_max_drdt_vars = {}
         self.layer_warning_vars = {}
+        self.layer_max_drdt_warning_vars = {}
         self.layer_status_labels = {}
         self.device_controls_locked = False
 
@@ -150,6 +176,9 @@ class ConfigPage(PageObject):
         for sensor_dropdown in self.layer_sensor_type_dropdowns.values():
             sensor_dropdown.set_state(state)
 
+        for entry in self.layer_max_drdt_entries.values():
+            entry.configure(state="disabled" if is_running else "normal")
+
     def _handle_configuration_name_selection(self, layer_number, event=None):
         """When a preset is chosen, fill the layer's manual dropdowns from that configuration."""
         if self.device_controls_locked:
@@ -210,6 +239,36 @@ class ConfigPage(PageObject):
         # dependent pages (2D diagrams, live channel count) must refresh too.
         self._notify_layer_change_observers()
 
+    def _handle_max_d_r_rel_dt_input(self, layer_number, event=None):
+        """Show a warning for invalid numbers while leaving the user's text in place."""
+        if self.device_controls_locked:
+            return
+
+        var = self.layer_max_drdt_vars.get(layer_number)
+        if var is None:
+            return
+
+        entered_text = var.get().strip()
+        warning_var = self.layer_max_drdt_warning_vars.get(layer_number)
+        if warning_var is None:
+            return
+
+        if not entered_text:
+            warning_var.set("")
+            self.config_values.setdefault("layer_max_drdt", {}).pop(layer_number, None)
+            self._save_config_values()
+            return
+
+        value = parse_positive_float(entered_text)
+        if value is None:
+            warning_var.set("Value must be a positive number.")
+            return
+
+        warning_var.set("")
+        self.config_values.setdefault("layer_max_drdt", {})[layer_number] = value
+        self._save_config_values()
+        self._notify_layer_change_observers()
+
     def _refresh_layer_status(self, layer_number):
         """Show the configuration name and sensor design for this layer, or a warning if either is missing."""
         warning_var = self.layer_warning_vars.get(layer_number)
@@ -240,6 +299,8 @@ class ConfigPage(PageObject):
         self.layer_config_name_dropdowns.clear()
         self.layer_feature_dropdowns.clear()
         self.layer_sensor_type_dropdowns.clear()
+        self.layer_max_drdt_entries.clear()
+        self.layer_max_drdt_vars.clear()
         self.layer_status_labels.clear()
 
         try:
@@ -259,6 +320,7 @@ class ConfigPage(PageObject):
 
             self.layer_feature_dropdowns[layer_number] = {}
             self.layer_warning_vars[layer_number] = tk.StringVar(value="")
+            self.layer_max_drdt_warning_vars[layer_number] = tk.StringVar(value="")
 
             selection_frame = ttk.Frame(layer_frame)
             selection_frame.pack(fill="x", anchor="w", pady=(0, 5))
@@ -292,19 +354,50 @@ class ConfigPage(PageObject):
                 dropdown.pack(side="left", anchor="w", padx=(0, 15), pady=(0, 5))
                 self.layer_feature_dropdowns[layer_number][feature_key] = dropdown
 
+            controls_row = ttk.Frame(layer_frame)
+            controls_row.pack(fill="x", anchor="w", pady=(5, 5))
+
             sensor_type_dropdown = DropdownObject(
-                layer_frame,
+                controls_row,
                 "Sensor design",
                 self.sensor_design_backend.get_sensor_type_options(),
                 default_value="No selection",
                 width=18,
                 command=lambda event, number=layer_number: self._handle_sensor_type_selection(number, event),
             )
-            sensor_type_dropdown.pack(anchor="w", pady=(5, 5))
+            sensor_type_dropdown.pack(side="left", anchor="n", padx=(0, 12))
             self.layer_sensor_type_dropdowns[layer_number] = sensor_type_dropdown
             existing_sensor_type = self.sensor_design_backend.get_layer_sensor_type(layer_number)
             if existing_sensor_type:
                 sensor_type_dropdown.set(existing_sensor_type)
+
+            max_drdt_frame = ttk.Frame(controls_row)
+            max_drdt_frame.pack(side="left", anchor="n")
+            ttk.Label(
+                max_drdt_frame,
+                text="Max dR/dt (relative)",
+                font=("Segoe UI", 10, "bold"),
+                width=22,
+            ).pack(anchor="w", pady=(0, 4))
+            max_drdt_var = tk.StringVar(value="")
+            saved_max_drdt = self.config_values.get("layer_max_drdt", {}).get(layer_number)
+            if saved_max_drdt is not None:
+                max_drdt_var.set(str(saved_max_drdt))
+            max_drdt_entry = ttk.Entry(max_drdt_frame, textvariable=max_drdt_var, width=12)
+            max_drdt_entry.pack(anchor="w")
+            max_drdt_entry.bind("<FocusOut>", lambda event, number=layer_number: self._handle_max_d_r_rel_dt_input(number, event))
+            max_drdt_entry.bind("<Return>", lambda event, number=layer_number: self._handle_max_d_r_rel_dt_input(number, event))
+            self.layer_max_drdt_entries[layer_number] = max_drdt_entry
+            self.layer_max_drdt_vars[layer_number] = max_drdt_var
+
+            max_drdt_warning_label = ttk.Label(
+                layer_frame,
+                textvariable=self.layer_max_drdt_warning_vars[layer_number],
+                foreground="red",
+                wraplength=1000,
+                justify="left",
+            )
+            max_drdt_warning_label.pack(anchor="w", pady=(2, 0))
 
             warning_label = ttk.Label(
                 layer_frame,
@@ -358,6 +451,10 @@ class ConfigPage(PageObject):
             sensor_type = sensor_dropdown.get() if sensor_dropdown else "No selection"
             description_parts.append(f"configuration name={configuration_name}")
             description_parts.append(f"sensor design={sensor_type}")
+
+            max_drdt_value = self.config_values.get("layer_max_drdt", {}).get(layer_number)
+            if max_drdt_value is not None:
+                description_parts.append(f"max_dR_rel/dt={max_drdt_value}")
 
             layer_description.append(
                 f"Layer {layer_number}: " + ", ".join(description_parts)

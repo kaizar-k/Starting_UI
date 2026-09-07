@@ -138,6 +138,13 @@ class TwoDVisualisationPage(PageObject):
             layer_content_frame = ttk.Frame(layer_frame)
             layer_content_frame.pack(anchor="w", fill="x")
 
+            layer_max_drdt = config_page.config_values.get("layer_max_drdt", {}).get(layer_number)
+            ttk.Label(
+                layer_frame,
+                text=f"Max dR_rel/dt: {layer_max_drdt if layer_max_drdt is not None else 'Not set'}",
+                font=("Segoe UI", 10, "bold"),
+            ).pack(anchor="w", pady=(0, 6))
+
             dimensions, sensing_points = geometry
             sensor_canvas = SensorDesignCanvas(
                 layer_content_frame,
