@@ -108,7 +108,8 @@ def main():
 
         for i in range(1, channel_count + 1):
             channel_data = list(channels[i].return_raw_data())
-            all_lines[i - 1].set_data(time_data, channel_data)
+            limit = min(len(time_data), len(channel_data))
+            all_lines[i - 1].set_data(time_data[:limit], channel_data[:limit])
 
         return all_lines
 
@@ -119,7 +120,8 @@ def main():
 
         if channel_count >= 5:
             ch5_data = list(channels[5].return_raw_data())
-            line_ch5.set_data(time_data, ch5_data)
+            limit = min(len(time_data), len(ch5_data))
+            line_ch5.set_data(time_data[:limit], ch5_data[:limit])
 
         return [line_ch5]
 

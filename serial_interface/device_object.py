@@ -41,7 +41,6 @@ class DeviceObject(serial.Serial):
         self.num_channels = int(raw_nc[1])
         # Safety state variables for certain methods.
         self.running = False
-        self.configured = False
 
     def __str__(self):
         return (f'Device Index: {self.index}, Desc: {self.desc}, '
@@ -67,18 +66,18 @@ class DeviceObject(serial.Serial):
 
                 try:
                     timestamp = int(split_output[0])
-                    time_channel = self.channel_collection[0]
-                    time_channel.add_val(timestamp)
-                    channel_output.append(timestamp)
-
+                    parsed_values = [timestamp]
                     for i in range (1,self.num_channels+1):
                         target_channel = self.channel_collection[i]
                         correct_form = target_channel.form
 
                         channel_data = split_output[i]
                         correct_val = correct_form(channel_data)
-                        target_channel.add_val(correct_val)
-                        channel_output.append(correct_val)
+                        parsed_values.append(correct_val)
+
+                    for channel, value in zip(self.channel_collection, parsed_values):
+                        channel.add_val(value)
+                    channel_output.extend(parsed_values)
 
 
                 except ValueError:
@@ -140,7 +139,6 @@ class DeviceObject(serial.Serial):
             self.serial_clear()
 
         self.change_config_string(new_config_string)
-        self.channel_collection = []
         self.set_up_channels()
 
         if was_running:
@@ -223,34 +221,10 @@ class DeviceObject(serial.Serial):
         for i in range(1,self.num_channels+1):
             new_channel = ChannelObject(index = i,uom = "Ohms", form = float)
             self.channel_collection.append(new_channel)
-        pass
-
-    def add_channel(self):
-        # Currently not used, but provided regardless.
-        if not self.running:
-            new_channel = ChannelObject(index = self.num_channels + 1 )
-            self.num_channels += 1
-            self.channel_collection.append(new_channel)
-            return True
-        else:
-            print("Cannot add channel during operation!")
-            return False
-
-    def remove_channel(self,channel_no):
-        # Used if removing channels, in the event that there are gaps between
-        # channels 1 and n.
-
-            if self.num_channels >= channel_no > 0:
-                self.channel_collection[channel_no].selected = False
-                return True
-            else:
-                print(f"Channel number {channel_no} invalid")
-                return False
 
     def save_as_csv(self):
         # Simply calls the csv function, and passes it the list of channels.
         csv_saver(self.channel_collection)
-        pass
 
     def serial_clear(self):
         # A more convenient syntax of self.serial_clear for clearing the

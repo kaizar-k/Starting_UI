@@ -18,14 +18,24 @@ def get_live_trace_series(active_device, channel_number):
     if channel_number < 0 or channel_number >= len(channel_collection):
         raise IndexError(f"Channel {channel_number} is out of range for this device.")
 
-    time_values = list(channel_collection[0].return_raw_data())
-    resistance_values = list(channel_collection[channel_number].return_raw_data())
+    raw_time_values = list(channel_collection[0].return_raw_data())
+    raw_resistance_values = list(channel_collection[channel_number].return_raw_data())
 
-    limit = min(len(time_values), len(resistance_values))
-    if limit == 0:
+    samples = []
+    last_timestamp = None
+    for timestamp, resistance in zip(raw_time_values, raw_resistance_values):
+        # A timestamp that moves backwards would make Matplotlib draw a line
+        # across an earlier part of the trace. Ignore only that bad sample.
+        if last_timestamp is not None and timestamp <= last_timestamp:
+            continue
+        samples.append((timestamp, resistance))
+        last_timestamp = timestamp
+
+    if not samples:
         return [], []
 
-    return time_values[:limit], resistance_values[:limit]
+    time_values, resistance_values = zip(*samples)
+    return list(time_values), list(resistance_values)
 
 
 class TracePopup:

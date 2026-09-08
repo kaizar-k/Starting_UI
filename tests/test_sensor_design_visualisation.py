@@ -162,6 +162,28 @@ def test_get_live_trace_series_returns_time_and_channel_data():
     assert resistance_series == [12.5, 13.4, 14.8]
 
 
+def test_get_live_trace_series_ignores_samples_with_backwards_timestamps():
+    class FakeChannel:
+        def __init__(self, values):
+            self._values = list(values)
+
+        def return_raw_data(self):
+            return self._values
+
+    class FakeDevice:
+        channel_collection = [
+            FakeChannel([1000, 10000, 2000, 11000]),
+            FakeChannel([12.5, 13.0, 13.5, 14.0]),
+        ]
+
+    from visualisation_backend.trace_visualisation import get_live_trace_series
+
+    assert get_live_trace_series(FakeDevice(), 1) == (
+        [1000, 10000, 11000],
+        [12.5, 13.0, 14.0],
+    )
+
+
 def update_hover_highlight(canvas: tk.Canvas, dimensions, sensing_points, mouse_x, mouse_y):
     width, height = dimensions
     padding = 30
