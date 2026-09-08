@@ -60,16 +60,16 @@ class CalibrationCurveBackend:
 
     def load_configuration_data(self, configuration_name: str):
         if not configuration_name or configuration_name == "No selection":
-            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1, "area": 380.0}
+            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1, "area": 836.0}
 
         try:
             df = self._read_configurations_df()
         except Exception:
-            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1, "area": 380.0}
+            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1, "area": 836.0}
 
         row = df[df["configuration_name"].astype(str).str.strip() == configuration_name.strip()]
         if row.empty:
-            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1, "area": 380.0}
+            return {"threshold_forces": [0.0, 0.0], "regimes": [], "regime_count": 1, "area": 836.0}
 
         row = row.iloc[0]
 
@@ -97,12 +97,12 @@ class CalibrationCurveBackend:
                         threshold_forces = [0.0, 0.0]
 
         area_value = row.get("area")
-        area = 380.0
+        area = 836.0
         if pd.notna(area_value) and str(area_value).strip():
             try:
                 area = float(str(area_value).strip())
             except ValueError:
-                area = 380.0
+                area = 836.0
 
         max_force = float(threshold_forces[1]) if len(threshold_forces) >= 2 else 0.0
         max_pressure = 0.0

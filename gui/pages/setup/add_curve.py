@@ -48,7 +48,7 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
         self.upper_threshold_entry.pack(side="left", anchor="n")
 
         ttk.Label(self.top_frame, text="Force applicator area (mm²):").pack(side="left", padx=(8, 8), anchor="n")
-        self.force_applicator_area_var = tk.StringVar(value="380")
+        self.force_applicator_area_var = tk.StringVar(value="836.0")
         self.force_applicator_area_entry = ttk.Entry(
             self.top_frame,
             textvariable=self.force_applicator_area_var,
@@ -98,7 +98,7 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
         if not configuration_name or configuration_name == "No selection":
             self.lower_threshold_var.set("0")
             self.upper_threshold_var.set("0")
-            self.force_applicator_area_var.set("380")
+            self.force_applicator_area_var.set("836.0")
             self.regime_count_dropdown.set("1")
             self._refresh_regime_rows()
             return
@@ -107,7 +107,7 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
         threshold_forces = data.get("threshold_forces", [0.0, 0.0])
         self.lower_threshold_var.set(str(threshold_forces[0]))
         self.upper_threshold_var.set(str(threshold_forces[1]))
-        self.force_applicator_area_var.set(str(data.get("area", 380.0)))
+        self.force_applicator_area_var.set(str(data.get("area", 836.0)))
 
         regime_count = max(1, min(5, data["regime_count"]))
         self.regime_count_dropdown.set(str(regime_count))
@@ -262,7 +262,7 @@ class AddCalibrationCurveSection(ttk.LabelFrame):
         self.configuration_dropdown.set("No selection")
         self.lower_threshold_var.set("0")
         self.upper_threshold_var.set("0")
-        self.force_applicator_area_var.set("380")
+        self.force_applicator_area_var.set("836.0")
         self.regime_count_dropdown.set("1")
         self._refresh_regime_rows()
         self.message_label.config(text="")

@@ -136,7 +136,7 @@ class ThreeDVisualisationPage(PageObject):
             calibration_data = self._calibration_backend.load_configuration_data(configuration_name)
             self._layer_calibration_inputs[layer_number] = {
                 "calibration_data": calibration_data,
-                "area": float(calibration_data.get("area", 380.0)),
+                "area": float(calibration_data.get("area", 836.0)),
             }
 
             channel_numbers = layer_channel_map.get(layer_number, [])
