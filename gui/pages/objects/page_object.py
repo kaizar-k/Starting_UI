@@ -6,7 +6,7 @@ from tkinter import font as tkFont
 from gui.page_features.colour_scheme import BACKGROUND, LOGO_COLOUR, HIGHLIGHT, TEXT_COLOUR
 from gui.controls.label import Label
 from gui.controls.button import Button
-from gui.page_features.font_definitions import TITLE_FONT, HEADER_FONT
+from gui.page_features.font_definitions import get_title_font, get_header_font
 from gui.frames.container_frame import ContainerFrame
 
 
@@ -58,13 +58,13 @@ class PageObject(tk.Frame):
         button_labels = ['Config', 'Device', '2D plots', '3D plots', 'Add/remove']
         for button_num, button_text in enumerate(button_labels):
             self.page_buttons.append(Button(self.menu_frame, text=button_text))
-            self.page_buttons[button_num].configure(font=HEADER_FONT)
+            self.page_buttons[button_num].configure(font=get_header_font())
             self.page_buttons[button_num].pack(side='left', fill='both', expand=True)
 
         # Keep a popup toggle button in the title bar so the main pages can still open their popup views.
         self.pop_up_button = Button(self.title_frame, text='>')
         self.pop_up_button.configure(
-            font=TITLE_FONT,
+            font=get_title_font(),
             bg=HIGHLIGHT,
             highlightbackground=HIGHLIGHT,
             activebackground='#D9ECFF',
@@ -78,7 +78,7 @@ class PageObject(tk.Frame):
             textvariable=self.force_reading_var,
             bg=LOGO_COLOUR,
             fg=TEXT_COLOUR,
-            font=HEADER_FONT,
+            font=get_header_font(),
             width=60,
             anchor="w",
         )
@@ -88,7 +88,7 @@ class PageObject(tk.Frame):
         # pack title of page into title_frame
         self.title = Label(self.title_frame, text=self.title_text)
         self.title.pack(side='left', fill='both', expand=True, anchor='w', padx=(0, 0))
-        self.title.configure(font=TITLE_FONT, anchor='w')
+        self.title.configure(font=get_title_font(), anchor='w')
         self.after(100, self._update_force_reading)
 
     def refresh_from_config(self):

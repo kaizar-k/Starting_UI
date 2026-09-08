@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from gui.pages.objects.page_object import PageObject
+from gui.pages.setup.device_trial import DeviceTrialSection
 from visualisation_backend.pressure_visualisation import PressureVisualisation
 
 
@@ -59,6 +60,10 @@ class DeviceConnectionPage(PageObject):
         self.force_gauge_applicator_area_entry.pack(side="left")
         self.force_gauge_applicator_area_entry.bind("<Return>", self._save_force_gauge_applicator_area)
         self.force_gauge_applicator_area_entry.bind("<FocusOut>", self._save_force_gauge_applicator_area)
+
+        # Trial data collection sits below the start/stop controls on the same page.
+        # device_getter lets the snapshot section read the live active device at click time.
+        self.trial_section = DeviceTrialSection(self.form_frame, device_getter=lambda: self.master.active_device)
 
         self._schedule_scroll_region_update()
 

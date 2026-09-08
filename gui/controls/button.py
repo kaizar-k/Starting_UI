@@ -1,6 +1,6 @@
 import tkinter as tk
 from gui.page_features.colour_scheme import *
-from gui.page_features.font_definitions import *
+from gui.page_features.font_definitions import get_header_font
 
 
 class Button(tk.Button):
@@ -10,7 +10,7 @@ class Button(tk.Button):
             text=text,
             fg=TEXT_COLOUR,
             bg=EMPHASIS,
-            font=HEADER_FONT,
+            font=get_header_font(),
             highlightbackground=EMPHASIS,
             activebackground=HIGHLIGHT,
             activeforeground=TEXT_COLOUR,

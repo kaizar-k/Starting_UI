@@ -4,7 +4,7 @@ from gui.controls.label import Label
 from gui.controls.button import Button
 from gui.frames.container_frame import ContainerFrame
 from gui.page_features.colour_scheme import *
-from gui.page_features.font_definitions import *
+from gui.page_features.font_definitions import get_title_font
 from gui.frames.label_frame import LabelFrame
 
 # This will be the parent class for all the pop-up windows
@@ -39,7 +39,7 @@ class PopUpObject(tk.Frame):
         # pack a single toggle button into the parameters button frame
         self.pop_up_button = Button(self.hide_frame_container, text='<')
         self.pop_up_button.configure(
-            font=TITLE_FONT,
+            font=get_title_font(),
             bg=HIGHLIGHT,
             highlightbackground=HIGHLIGHT,
             activebackground='#D9ECFF',
