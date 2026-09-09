@@ -5,6 +5,7 @@ from backend.calibration_curve_backend import CalibrationCurveBackend
 from gui.controls.colourbar import create_turbo_colorbar
 from gui.controls.sensor_design_canvas import SensorDesignCanvas
 from gui.pages.objects.page_object import PageObject
+from visualisation_backend.device_all_traces import DeviceAllTraces
 from visualisation_backend.layer_text_backend import LayerTextBackend
 from visualisation_backend.pressure_visualisation import PressureVisualisation
 from visualisation_backend.trace_visualisation import TracePopup
@@ -71,9 +72,46 @@ class TwoDVisualisationPage(PageObject):
         )
         self._trace_windows[key] = popup.window
 
+    def open_all_sensor_traces(self, device=None):
+        """Open a single window containing the raw live resistance trace for every configured sensor point."""
+        if device is None:
+            device = self.master.active_device
+        if device is None:
+            return
+
+        config_page = self.master.pages[0]
+        try:
+            layer_count = int(config_page.config_values.get("number_of_layers", "1"))
+        except ValueError:
+            layer_count = 1
+
+        configured_layers = [
+            layer_number for layer_number in range(1, layer_count + 1)
+            if config_page.is_layer_fully_configured(layer_number)
+        ]
+        if not configured_layers:
+            return
+
+        channel_map = config_page.sensor_design_backend.build_channel_map(layer_count)
+        channel_numbers = []
+        for layer_number in configured_layers:
+            channel_numbers.extend(channel_map.get(layer_number, []))
+
+        if not channel_numbers:
+            return
+
+        # The generated channels are in physical order, so a 2..9 range appears as
+        # [2, 3, 4, 5, 6, 7, 8, 9], and a 2..13 range becomes the full inclusive list.
+        DeviceAllTraces(
+            self,
+            active_device=device,
+            channel_numbers=channel_numbers,
+        )
+
     def close_trace_windows(self):
         """Drop every open trace window so a new run cannot show the previous run's curve."""
         TracePopup.close_all()
+        DeviceAllTraces.close_all()
         self._trace_windows = {}
 
     def refresh_selected_layers_display(self):

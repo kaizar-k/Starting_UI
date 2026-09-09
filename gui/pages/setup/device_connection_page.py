@@ -173,6 +173,8 @@ class DeviceConnectionPage(PageObject):
         PressureVisualisation.reset_runtime_state()
         device.start_device()
         self._start_polling(device)
+        # Open one live resistance window for every physical sensing-point channel in the active design.
+        self.master.pages[2].open_all_sensor_traces(device)
         self.master.pages[0].set_device_running_state(device.running)
         self.force_gauge_applicator_area_entry.configure(state="disabled" if device.running else "normal")
 
