@@ -89,9 +89,16 @@ class TKinterApp(tk.Tk):
         self.update_idletasks()
 
         # Display the configuration page when the app starts.
+        self._current_page_index = None
         self.show_frame(0)
 
     def show_frame(self, cont):
         """Raise the page at the given index so it becomes visible."""
+        if self._current_page_index == 4 and cont != 4:
+            # Leaving the 3D page should always clear the saved 3D visibility flag.
+            self.pages[6].clear_show_3d_plot()
+            self.pages[4].refresh_from_config()
+
         page = self.pages[cont]
+        self._current_page_index = cont
         page.tkraise()

@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from visualisation_backend.pressure_visualisation import PressureVisualisation
+
 # The snapshot stores one resistance value per sensing point. Channel 1 on the
 # physical device is reserved for the force gauge, so the 12 sensing points live
 # on channels 2..13 (channel_collection indices 2..13).
@@ -80,13 +82,16 @@ class TrialSnapshotBackend:
             options.append(label)
         return options
 
-    def get_latest_resistances(self, device) -> list[float] | None:
-        """Return the most recent resistance of each of the 12 sensing points, or None.
+    def get_latest_relative_resistances(self, device) -> list[float] | None:
+        """Return the latest relative resistance of each sensing point, or None.
 
-        Returns None when the device has not produced data for every sensing point,
-        so the caller can warn the user instead of saving a partial row.
+        The snapshot uses the same runtime baseline path as the live visualisation so
+        the saved row stores the already-normalised values instead of raw ohms.
         """
-        resistances = []
+        if device is None or not hasattr(device, "channel_collection"):
+            return None
+
+        relative_resistances = []
         for point_number in range(1, SENSING_POINT_COUNT + 1):
             # channel_collection index 0 is the timestamp, index 1 is the reserved
             # force-gauge channel, so sensing point n sits at index n + 1.
@@ -98,9 +103,25 @@ class TrialSnapshotBackend:
             if not channel_data:
                 return None
 
-            resistances.append(channel_data[-1])
+            latest_resistance = float(channel_data[-1])
+            point_state = PressureVisualisation._get_or_create_point_state(
+                channel_index,
+                channel_data,
+                [0.0, float("inf")],
+                1.0,
+            )
+            if point_state is None:
+                return None
 
-        return resistances
+            baseline_resistance = point_state["baseline_resistance"]
+            relative_resistances.append(
+                PressureVisualisation.get_relative_resistance_from_absolute(
+                    latest_resistance,
+                    baseline_resistance,
+                )
+            )
+
+        return relative_resistances
 
     def save_snapshot(self, resistances: list[float], shape: str) -> int:
         """Append one trial row and return the trial_ID that was written."""

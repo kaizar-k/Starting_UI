@@ -24,7 +24,7 @@ class AddTrialSnapshotSection(ttk.LabelFrame):
 
         ttk.Label(
             self,
-            text="Select the shape being pressed, apply the steady load, then capture one snapshot of every sensing point's resistance.",
+            text="Select the shape being pressed, apply the steady load, then capture one snapshot of every sensing point's relative resistance.",
             wraplength=1000,
             justify="left",
         ).pack(anchor="w", pady=(0, 6))
@@ -58,13 +58,13 @@ class AddTrialSnapshotSection(ttk.LabelFrame):
             self.message_label.config(text="Cannot take a snapshot: the device is not connected and running.")
             return
 
-        resistances = self.snapshot_backend.get_latest_resistances(device)
-        if resistances is None:
-            self.message_label.config(text="Need a complete 12-channel reading before saving.")
+        relative_resistances = self.snapshot_backend.get_latest_relative_resistances(device)
+        if relative_resistances is None:
+            self.message_label.config(text="Need a complete 12-channel reading and a locked baseline before saving.")
             return
 
         try:
-            trial_id = self.snapshot_backend.save_snapshot(resistances, selected_shape)
+            trial_id = self.snapshot_backend.save_snapshot(relative_resistances, selected_shape)
         except Exception:
             self.message_label.config(text="Snapshot could not be saved to trial_data.csv.")
             return
