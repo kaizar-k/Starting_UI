@@ -16,6 +16,7 @@ class PressureVisualisation:
     _runtime_signature = None
     _runtime_regimes = []
     _runtime_point_state = {}
+    _runtime_pending_baselines = {}
     _baseline_window_size = 10
 
     @staticmethod
@@ -25,6 +26,31 @@ class PressureVisualisation:
         PressureVisualisation._runtime_signature = None
         PressureVisualisation._runtime_regimes = []
         PressureVisualisation._runtime_point_state = {}
+        PressureVisualisation._runtime_pending_baselines = {}
+
+    @staticmethod
+    def rebase_runtime_state(baselines):
+        """Set live baselines to captured readings without interrupting the device stream."""
+        for channel_number, baseline in baselines.items():
+            try:
+                baseline = float(baseline)
+            except (TypeError, ValueError):
+                continue
+            if not math.isfinite(baseline) or baseline <= 0:
+                continue
+
+            state = PressureVisualisation._runtime_point_state.get(channel_number)
+            if state is None:
+                # Preserve the instantaneous value until pressure processing creates its state.
+                PressureVisualisation._runtime_pending_baselines[channel_number] = baseline
+                continue
+
+            state["baseline_resistance"] = baseline
+            state["previous_force"] = None
+            for regime in state.get("regimes", []):
+                regime["absolute_boundary_resistance"] = float(
+                    baseline * regime["relative_boundary_resistance"]
+                )
 
     @staticmethod
     def _normalise_polynomial(coefficients):
@@ -127,7 +153,12 @@ class PressureVisualisation:
         if state is not None:
             return state
 
-        baseline = PressureVisualisation._extract_startup_baseline(samples, PressureVisualisation._baseline_window_size)
+        baseline = PressureVisualisation._runtime_pending_baselines.pop(channel_number, None)
+        if baseline is None:
+            baseline = PressureVisualisation._extract_startup_baseline(
+                samples,
+                PressureVisualisation._baseline_window_size,
+            )
         if baseline is None:
             return None
 

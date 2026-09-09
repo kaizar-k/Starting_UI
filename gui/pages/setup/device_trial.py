@@ -29,6 +29,11 @@ class AddTrialSnapshotSection(ttk.LabelFrame):
             justify="left",
         ).pack(anchor="w", pady=(0, 6))
 
+        snapshot_button_frame = ttk.Frame(self)
+        snapshot_button_frame.pack(fill="x", pady=(0, 8))
+        snapshot_button = ttk.Button(snapshot_button_frame, text="Take snapshot", command=self._take_snapshot)
+        snapshot_button.pack(side="left")
+
         self.shape_dropdown = DropdownObject(
             self,
             "Shape",
@@ -42,9 +47,6 @@ class AddTrialSnapshotSection(ttk.LabelFrame):
         # the config/design/options sections. It stays visible until the next attempt.
         self.message_label = ttk.Label(self, text="", foreground="red", wraplength=1000, justify="left")
         self.message_label.pack(anchor="w", pady=(8, 0))
-
-        snapshot_button = ttk.Button(self, text="Take snapshot", command=self._take_snapshot)
-        snapshot_button.pack(anchor="e", pady=(8, 0))
 
     def _take_snapshot(self):
         """Validate inputs, read the latest channel values, and append one trial row."""

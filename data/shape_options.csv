@@ -1,6 +1,5 @@
 category,value
-Shape,bar_top
-Shape,circle
-Shape,giffy
-Shape,triangle
-Shape,bar_bottom
+Shape,round_bottom
+Shape,round_left
+Shape,round_right
+Shape,round_top

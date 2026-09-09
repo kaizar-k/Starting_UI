@@ -44,6 +44,9 @@ class DeviceConnectionPage(PageObject):
         ttk.Button(button_row, text="Connect", command=self._connect_device).pack(side="left", padx=(0, 5))
         ttk.Button(button_row, text="Start", command=self._start_device).pack(side="left", padx=(0, 5))
         ttk.Button(button_row, text="Stop", command=self._stop_device).pack(side="left", padx=(0, 5))
+        ttk.Button(button_row, text="Reset Base Resistance", command=self._reset_base_resistance).pack(
+            side="left", padx=(0, 5)
+        )
 
         area_frame = ttk.Frame(self.form_frame)
         area_frame.pack(anchor="w", pady=(15, 0))
@@ -215,6 +218,35 @@ class DeviceConnectionPage(PageObject):
         while not stop_event.is_set() and device.running:
             device.receive_serial()
             time.sleep(self.POLL_INTERVAL_SECONDS)
+
+    def _reset_base_resistance(self):
+        """Rebase live resistance values while leaving serial acquisition running."""
+        device = self.master.active_device
+        if device is None or not device.running:
+            self.status_var.set("Device must be running to reset base resistance.")
+            return
+
+        baselines = {}
+        for channel_number, channel in enumerate(device.channel_collection[1:], start=1):
+            samples = channel.return_raw_data()
+            if samples:
+                try:
+                    baseline = float(samples[-1])
+                except (TypeError, ValueError):
+                    continue
+                if math.isfinite(baseline) and baseline > 0:
+                    baselines[channel_number] = baseline
+
+        if not baselines:
+            self.status_var.set("No live resistance values are available to reset.")
+            return
+
+        # Capture first, then clear histories so the button press does not stop acquisition.
+        PressureVisualisation.rebase_runtime_state(baselines)
+        for channel in device.channel_collection:
+            channel.clear_data()
+
+        self.status_var.set(f"Base resistance reset for {len(baselines)} channel(s).")
 
     def _stop_device(self):
         device = self.master.active_device
