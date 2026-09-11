@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from gui.pages.objects.page_object import PageObject
-from gui.pages.setup.device_trial import DeviceTrialSection
+from gui.pages.setup.device_trial import DeviceTrialSection, ShapeClassifierSection
 from visualisation_backend.pressure_visualisation import PressureVisualisation
 
 
@@ -64,7 +64,12 @@ class DeviceConnectionPage(PageObject):
         self.force_gauge_applicator_area_entry.bind("<Return>", self._save_force_gauge_applicator_area)
         self.force_gauge_applicator_area_entry.bind("<FocusOut>", self._save_force_gauge_applicator_area)
 
-        # Trial data collection sits below the start/stop controls on the same page.
+        self.shape_classifier_section = ShapeClassifierSection(
+            self.form_frame,
+            device_getter=lambda: self.master.active_device,
+        )
+
+        # Trial data collection sits below the classifier controls on the same page.
         # device_getter lets the snapshot section read the live active device at click time.
         self.trial_section = DeviceTrialSection(self.form_frame, device_getter=lambda: self.master.active_device)
 
@@ -245,6 +250,7 @@ class DeviceConnectionPage(PageObject):
         PressureVisualisation.rebase_runtime_state(baselines)
         for channel in device.channel_collection:
             channel.clear_data()
+        device.reset_host_time_values()
 
         self.status_var.set(f"Base resistance reset for {len(baselines)} channel(s).")
 

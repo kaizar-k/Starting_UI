@@ -139,6 +139,29 @@ def test_sensor_design_canvas_uses_white_for_unavailable_pressure():
         root.destroy()
 
 
+def test_live_trace_series_uses_host_time_when_firmware_timestamp_stalls():
+    class FakeChannel:
+        def __init__(self, values):
+            self._values = values
+
+        def return_raw_data(self):
+            return self._values
+
+    class FakeDevice:
+        channel_collection = [
+            FakeChannel([0, 1, 1]),
+            FakeChannel([100.0, 101.0, 102.0]),
+        ]
+        host_time_values = [10.0, 25.0, 40.0]
+
+    from visualisation_backend.trace_visualisation import get_live_trace_series
+
+    time_values, resistance_values = get_live_trace_series(FakeDevice(), 1)
+
+    assert time_values == [10.0, 25.0, 40.0]
+    assert resistance_values == [100.0, 101.0, 102.0]
+
+
 def update_hover_highlight(canvas: tk.Canvas, dimensions, sensing_points, mouse_x, mouse_y):
     width, height = dimensions
     padding = 30

@@ -7,33 +7,21 @@ from matplotlib.figure import Figure
 
 
 def get_live_trace_series(active_device, channel_number):
-    """Return the live time and resistance data for a given channel."""
+    """Return host elapsed times and live resistance data for a given channel."""
     if active_device is None:
         return [], []
 
     channel_collection = getattr(active_device, "channel_collection", [])
-    if not channel_collection:
-        return [], []
-
     if channel_number < 0 or channel_number >= len(channel_collection):
-        raise IndexError(f"Channel {channel_number} is out of range for this device.")
-
-    raw_time_values = list(channel_collection[0].return_raw_data())
-    raw_resistance_values = list(channel_collection[channel_number].return_raw_data())
-
-    samples = []
-    last_timestamp = None
-    for timestamp, resistance in zip(raw_time_values, raw_resistance_values):
-        if last_timestamp is not None and timestamp <= last_timestamp:
-            continue
-        samples.append((timestamp, resistance))
-        last_timestamp = timestamp
-
-    if not samples:
         return [], []
 
-    time_values, resistance_values = zip(*samples)
-    return list(time_values), list(resistance_values)
+    raw_resistance_values = list(channel_collection[channel_number].return_raw_data())
+    host_time_values = list(getattr(active_device, "host_time_values", []))
+    if not host_time_values or not raw_resistance_values:
+        return [], []
+
+    sample_count = min(len(host_time_values), len(raw_resistance_values))
+    return host_time_values[:sample_count], raw_resistance_values[:sample_count]
 
 
 class TracePopup:

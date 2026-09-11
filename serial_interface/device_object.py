@@ -32,6 +32,9 @@ class DeviceObject(serial.Serial):
         self.__config_string = config_string
         # self.channel_collection is a list of Channel Objects
         self.channel_collection = []
+        # Host-side frame times keep visualisation timing independent of firmware timing.
+        self.host_time_values = []
+        self._host_time_origin = None
         # The following chunk parses the configuration string to
         # give the number of measurement channels (not inc. time).
         # It assumes that NC is the first item in the configuration string.
@@ -77,6 +80,8 @@ class DeviceObject(serial.Serial):
 
                     for channel, value in zip(self.channel_collection, parsed_values):
                         channel.add_val(value)
+                    if self._host_time_origin is not None:
+                        self.host_time_values.append((time.monotonic() - self._host_time_origin) * 1000.0)
                     channel_output.extend(parsed_values)
 
 
@@ -165,6 +170,7 @@ class DeviceObject(serial.Serial):
                 self.serial_clear()
                 self.write(bytes(start_message, 'utf-8'))
                 time.sleep(0.05)
+                self.reset_host_time_values()
 
                 print(f"Device{self.index} started!")
                 self.running = True
@@ -214,6 +220,8 @@ class DeviceObject(serial.Serial):
         # CSV export begins with an artificial startup row instead of the first
         # actual measurement.
         self.channel_collection = []
+        self.host_time_values = []
+        self._host_time_origin = None
 
         time_channel = ChannelObject(index = 0,uom = "ms",form = int)
         self.channel_collection.append(time_channel)
@@ -221,6 +229,11 @@ class DeviceObject(serial.Serial):
         for i in range(1,self.num_channels+1):
             new_channel = ChannelObject(index = i,uom = "Ohms", form = float)
             self.channel_collection.append(new_channel)
+
+    def reset_host_time_values(self):
+        """Start a fresh host-side elapsed-time series for live trace displays."""
+        self.host_time_values = []
+        self._host_time_origin = time.monotonic()
 
     def save_as_csv(self):
         # Simply calls the csv function, and passes it the list of channels.

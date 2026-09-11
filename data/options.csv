@@ -1,12 +1,12 @@
 category,value
 AC/DC,AC
 AC/DC,DC
+Sensor Type,3-loop
+Sensor Type,4-Loop
 Sensor Type,hi
 Sensor Type,Loop
 Sensor Type,rectangle
 Sensor Type,square
-Sensor Type,yoooooo
-Sensor Type,4-Loop
 Substrate,5202
 Substrate,C20
 Substrate,C81

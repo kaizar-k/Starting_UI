@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from backend.resistance_snapshot_backend import TrialSnapshotBackend
+from backend.shape_classifier_backend import ShapeClassifierBackend
 from backend.shape_options_backend import ShapeOptionsData
 from gui.controls.dropdown_object import DropdownObject
 
@@ -268,6 +269,55 @@ class RemoveShapeOptionSection(ttk.LabelFrame):
     def refresh(self):
         self.shape_dropdown.dropdown.configure(values=self._get_remove_options())
         self.shape_dropdown.set("No selection")
+
+
+class ShapeClassifierSection(ttk.LabelFrame):
+    """Device page section reserved for live shape classification controls."""
+
+    def __init__(self, parent, device_getter=None):
+        super().__init__(parent, text="Shape classifier", padding=12)
+        self.device_getter = device_getter
+        self.snapshot_backend = TrialSnapshotBackend()
+        self.classifier_backend = ShapeClassifierBackend()
+
+        self.pack(fill="x", pady=(15, 0), anchor="w")
+
+        ttk.Button(self, text="Shape guess", command=self._guess_shape).pack(anchor="w")
+
+        self.message_label = ttk.Label(
+            self,
+            text="",
+            font=("Segoe UI", 36, "bold"),
+            wraplength=1000,
+            justify="left",
+        )
+        self.message_label.pack(anchor="w", pady=(8, 0))
+
+    def _guess_shape(self):
+        """Read the current live snapshot and classify it with the saved model."""
+        device = self.device_getter() if self.device_getter is not None else None
+        if device is None or not device.is_open or not device.running:
+            self.message_label.config(text="Cannot guess shape: the device is not connected and running.", foreground="red")
+            return
+
+        relative_resistances = self.snapshot_backend.get_latest_relative_resistances(device)
+        if relative_resistances is None:
+            self.message_label.config(
+                text="Need a complete 12-channel reading and a locked baseline before guessing.",
+                foreground="red",
+            )
+            return
+
+        try:
+            guessed_shape = self.classifier_backend.predict_shape(relative_resistances)
+        except FileNotFoundError:
+            self.message_label.config(text="Cannot guess shape: saved classifier model is missing.", foreground="red")
+            return
+        except Exception:
+            self.message_label.config(text="Shape could not be guessed from the current snapshot.", foreground="red")
+            return
+
+        self.message_label.config(text=f"Guessed shape: {guessed_shape}", foreground="black")
 
 
 class DeviceTrialSection(ttk.LabelFrame):
